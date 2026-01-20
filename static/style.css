@@ -1,0 +1,1280 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+html {
+  width: 100%;
+  overflow-x: hidden;
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  30% {
+    transform: scale(1.05);
+  }
+  60% {
+    transform: scale(1);
+  }
+  100% {
+    transform: scale(1.05);
+  }
+}
+
+/* Body */
+body {
+  background-color: #151219;
+  color: #ffffff;
+  background-image:
+    linear-gradient(rgba(21, 18, 25, 0.6), rgba(21, 18, 25, 0.6)),
+    url("/static/bg.jpg");
+  background-repeat: no-repeat, no-repeat, repeat;
+  background-size: cover, cover, 400px 400px;
+  background-attachment: fixed, fixed, scroll;
+  font-family: 'open-sans', sans-serif;
+  word-wrap: break-word;
+  overflow-x: hidden;
+  margin: 0;
+  padding: 0;
+}
+
+/* NAVBAR BASE */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 90px;
+  background: #151219;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.navbar-container {
+  max-width: 1200px;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+  position: relative;
+}
+
+.logo {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: heartbeat 3s ease-in-out infinite;
+}
+
+.logo img {
+  height: 86px;
+  filter: drop-shadow(0px 3px 10px rgba(255, 255, 255, 0.25));
+}
+
+.nav-left ul,
+.nav-right ul {
+  display: flex;
+  gap: 30px;
+  list-style: none;
+}
+
+.nav-left ul li a,
+.nav-right ul li a {
+  text-decoration: none;
+  color: #ffffff;
+  font-family: 'Open Sans', sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.nav-left ul li a::after,
+.nav-right ul li a::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -6px;
+  left: 0;
+  background-color: #fe6995;
+  transition: width 0.3s ease-in-out;
+}
+
+.nav-left ul li a:hover::after,
+.nav-right ul li a:hover::after {
+  width: 100%;
+}
+
+.nav-left ul li a:hover,
+.nav-right ul li a:hover {
+  color: #fe6995;
+}
+
+/* Content */
+.content {
+  max-width: 1000px;
+  margin: auto;
+  text-align: center;
+  padding: 124px 20px 40px;
+  opacity: 0;
+  transform: translateY(20px);
+  animation: fadeUp 1.2s ease-out forwards;
+  animation-delay: 0.3s;
+}
+
+
+@keyframes fadeUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Must Try Section */
+.must-try-section {
+  padding: 70px 0 50px;   /* increased top gap for spacing below hero */
+  background: #151219;    /* matches your website theme */
+}
+
+.must-try-title {
+  font-size: 1.6rem;              /* reduced size */
+  text-align: center;
+  margin-bottom: 25px;
+  color: #FE6995;                 /* your pink highlight color */
+  font-family: 'Adieu', sans-serif;
+  letter-spacing: 1px;
+}
+
+/* Horizontal Scroll Wrapper */
+.must-try-scroll {
+  display: flex;
+  overflow-x: auto;
+  gap: 20px;
+  padding: 25px 15px;
+  scroll-snap-type: x mandatory;
+
+  background: linear-gradient(90deg, #1b1720, #151219);
+  border-radius: 14px;
+
+  scrollbar-width: none; 
+}
+
+.must-try-scroll::-webkit-scrollbar {
+  display: none;             /* hide scrollbar (Chrome) */
+}
+
+
+/* Item Cards */
+.must-try-item {
+  min-width: 2px;
+  max-width: 250px !important;
+  background: #1e1a25;          /* subtle dark card to match hero */
+  border: 1px solid #2a2532;    /* clean border to enhance premium feel */
+  border-radius: 18px;
+  padding: 15px;
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  transition: 0.25s ease;
+}
+.must-try-item:first-child {
+  width: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.must-try-item:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 0 20px rgba(254, 105, 149, 0.5);
+}
+
+.must-try-item img {
+  width: 40%;
+  border-radius: 14px;
+  margin-bottom: 12px;
+}
+
+.must-try-item h3 {
+  color: #ffffff;
+  font-family: 'Adieu', sans-serif;
+  font-size: 1rem;
+  margin-bottom: 5px;
+}
+
+.must-try-item p {
+  color: #c4c4c4;
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+}
+
+/* Order Button */
+.order-btn {
+  display: inline-block;
+  padding: 9px 16px;
+  background: #FE6995;     /* NEW COLOR */
+  color: #000000;             
+  font-weight: bold;
+  border-radius: 10px;
+  text-decoration: none;
+  font-family: 'Adieu', sans-serif;
+  font-size: 0.8rem;
+  transition: 0.25s ease;
+}
+
+.order-btn:hover {
+  background: #ff80a8;      /* slightly lighter hover shade */
+  transform: scale(1.07);
+}
+
+
+
+.content h1 {
+  font-family: 'Gefika', sans-serif;
+  font-size: 46px;
+  color: #FE6995;
+  letter-spacing: 1px;
+  animation: heartbeat 3s ease-in-out infinite;
+}
+
+
+h2 {
+  font-family: 'Gefika', sans-serif;
+  font-size: 24px;
+  color: #FE6995;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.content p {
+  font-size: 22px;
+  font-family: 'adieu', sans-serif;
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1.6;
+  animation: heartbeat 3s ease-in-out infinite;
+}
+
+.about-startup{
+    margin: 128px 0px 128px 0px;
+}
+/* Animation for scroll appearance */
+.about-startup {
+  opacity: 0;
+  transform: translateX(-100px);
+  transition: all 0.8s ease-out;
+  margin: 256px 0 128px 0;
+}
+
+.about-startup.animate-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+
+
+.about-startup p{
+  font-size: 13px;
+  font-family: 'adieu', sans-serif;
+  color: #ffffff;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 32px 64px 32px 64px
+}
+/* Hero Logo + Ellipse */
+.hero-logo {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.hero-logo::before {
+  content: "";
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  background-color: #151219;
+  border-radius: 50%;
+  z-index: 0;
+  filter: drop-shadow(0 6px 18px rgba(255, 255, 255, 0.1));
+}
+
+.hero-logo img {
+  width: 286px;
+  z-index: 1;
+  margin-top: 32px;
+  margin-bottom: 16px;
+  filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.25));
+}
+
+/* Button */
+.btn {
+  margin-top: 30px;
+  background-color: #f0544f;
+  color: #ffffff;
+  border: none;
+  padding: 12px 30px;
+  font-size: 16px;
+  font-weight: bold;
+  border-radius: 30px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  background-color: #d63b3b;
+}
+.features {
+  opacity: 0;
+  transform: translateX(100px); /* Opposite direction */
+  transition: all 0.8s ease-out;
+  margin: 256px 0 128px 0;
+}
+
+.features.animate-in {
+  opacity: 1;
+  transform: translateX(0);
+}
+
+.features {
+  font-family: adieu, sans-serif;
+  font-size: 11px;
+  color: #ffffff;
+  padding: 40px 20px;
+  text-align: center;
+}
+.features-grid {
+  display: flex;
+  justify-content: center;
+  gap: 64px;
+  flex-wrap: wrap;
+  margin-top: 20px;
+}
+.features {
+  margin-bottom: 192px;
+}
+.features h2{
+  font-family: 'Gefika', sans-serif;
+  padding-bottom: 32px;
+}
+.feature {
+  max-width: 300px;
+}
+.feature h3{
+  padding-bottom: 8px ;
+  color: #fe6995;
+}
+.testimonials {
+  padding: 40px 20px;
+  text-align: center;
+  max-width: 1000px;
+  margin: 0 auto;
+  box-sizing: border-box;
+}
+.testimonials h2{
+  color: #fe6995;;
+  font-family: 'Gefika', sans-serif;
+}
+.testimonial-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.testimonial-list blockquote {
+  width: 100%;
+  max-width: 600px;
+  margin: 0 auto;
+  font-family: 'Adieu', sans-serif;
+  font-style: italic;
+  font-size: 12px;
+  text-align: center;
+  padding: 8px 15px;
+  box-sizing: border-box;
+}
+
+.cta-explore {
+  text-align: center;
+  padding: 40px;
+}
+.explore-btn {
+  padding: 8px 24px;
+  font-family: 'Adieu', sans-serif;
+  font-size: 1em;
+  background-color: #fe6995;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  transition: background-color 0.3s ease;
+}
+.explore-btn:hover {
+  background-color: #d44e3d;
+}
+
+/* -----------------------------
+   INFO SECTIONS (Whey, Pre, Intra)
+------------------------------*/
+
+/* Fade + Slide Up Animation */
+@keyframes fadeSlideUp {
+  0% {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Main container */
+.info-section {
+  width: 90%;
+  max-width: 1100px;
+  margin: 120px auto 60px auto; /* below navbar */
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  padding: 40px;
+  backdrop-filter: blur(12px);
+  animation: fadeSlideUp 1s ease forwards;
+  box-shadow: 0 0 22px rgba(0, 0, 0, 0.45);
+}
+
+/* Main section titles */
+.info-section h2 {
+  font-size: 28px;
+  font-weight: 700;
+  font-family: 'Gefika', sans-serif;
+  color: #fe6995;
+  margin-bottom: 12px;
+}
+
+/* Subtitles (Why / How / etc.) */
+.info-section h3 {
+  font-family: 'Adieu', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  margin-top: 25px;
+  margin-bottom: 8px;
+  color: #fe6995;
+}
+
+/* Paragraphs */
+.info-section p {
+  font-size: 14px;
+  color: #ffffff;
+  line-height: 1.7;
+  margin-bottom: 12px;
+  font-family: 'Adieu', sans-serif;
+}
+
+/* Bullet list */
+.info-section ul {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 8px;
+}
+
+.info-section ul li {
+  font-family: 'Adieu', sans-serif;
+  font-size: 14px;
+  color: #ffffff;
+  margin-bottom: 8px;
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  line-height: 1.6;
+}
+
+/* Pink glowing checkmark */
+.info-section ul li::before {
+  content: "✔";
+  color: #fe6995;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+/* Hover glow effect */
+.info-section:hover {
+  box-shadow: 0 0 25px rgba(254, 105, 149, 0.35);
+  transition: 0.4s ease;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .info-section {
+    padding: 25px;
+    margin-top: 100px;
+  }
+  .info-section h2 {
+    font-size: 24px;
+  }
+  .info-section h3 {
+    font-size: 18px;
+  }
+  .info-section p,
+  .info-section ul li {
+    font-size: 14px;
+  }
+}
+
+/* Fix for review section */
+
+/* Make "Reviewing as" text use Adieu font */
+.review-form p {
+  font-family: 'adieu', sans-serif;
+  font-size: 13px;
+  color: #fff;
+}
+
+/* Remove diagonal lines / resize grip from textarea */
+.review-form textarea {
+  resize: none; /* disables the resize handle */
+  background-image: none !important; /* ensures no diagonal pattern appears */
+}
+
+/* Avvatar Section Styling */
+.avvatar-section {
+  color: #f5f5f5;
+  padding: 80px 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.avvatar-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 40px;
+  max-width: 1100px;
+}
+
+.avvatar-logo img {
+  width: 240px;
+  height: auto;
+  border-radius: 12px;
+  transition: transform 0.3s ease;
+}
+
+.avvatar-content {
+  flex: 1;
+  font-family: 'Adieu', sans-serif;
+  line-height: 1.7;
+}
+
+.avvatar-content h2 {
+  font-family: 'Gefika', sans-serif;
+  font-size: 24px;
+  margin-bottom: 15px;
+  color: #fe6995;
+}
+
+.avvatar-content p {
+  font-family: 'Adieu', sans-serif;
+  font-size: 13px;
+  color: #d4d4d4;
+  margin-bottom: 15px;
+}
+.fade-in-section {
+  opacity: 0;
+  transform: translateY(50px);
+  transition: opacity 2s ease-out, transform 2s ease-out;
+}
+
+.fade-in-section.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+
+@media (max-width: 768px) {
+  .avvatar-container {
+    flex-direction: column;
+    text-align: center;
+  }
+  .avvatar-content p{
+    font-size: 8px;
+  }
+  .avvatar-content h2{
+    font-size: 12px;
+  }
+  .avvatar-logo img {
+    width: 180px;
+  }
+}
+
+
+/* Footer */
+.site-footer {
+  background-color: #1c181f;
+  color: #d3d3d3;
+  padding: 50px 20px;
+  margin-top: 50px;
+}
+
+.footer-container {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: 30px;
+  text-align: left;
+  max-width: 1100px;
+  margin: auto;
+}
+
+/* Titles updated with Adieu font */
+.footer-section h3,
+.footer-section h4 {
+  color: #fe6995;
+  margin-bottom: 10px;
+  font-weight: 100;
+  font-family: 'Gefika', sans-serif;
+}
+
+.footer-section p {
+  font-family: 'Adieu', sans-serif;
+  margin: 6px 0;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+footer a {
+  font-family: 'Adieu', sans-serif;
+  margin: 6px 0;
+  font-size: 0.8rem;
+  color: #fe6995;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
+}
+
+/* Bottom line */
+.footer-bottom {
+  text-align: center;
+  margin-top: 40px;
+  font-size: 13px;
+  color: #777;
+  border-top: 1px solid #2b2630;
+  padding-top: 15px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .footer-container {
+    text-align: center;
+  }
+}
+
+/* Tablets and below */
+@media (max-width: 768px) {
+  .navbar {
+    height: auto;
+    padding: 10px 0;
+  }
+
+  .navbar-container {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    width: 100%;
+    position: relative;
+  }
+
+  .logo {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+  }
+
+  .logo img {
+    height: 54px;
+  }
+
+  .nav-left ul,
+  .nav-right ul {
+    display: flex;
+    flex-direction: row;
+    gap: 12px;
+    padding: 0;
+    margin: 0;
+    align-items: center;
+  }
+
+  .nav-left ul li,
+  .nav-right ul li {
+    text-align: center;
+  }
+
+  .nav-left ul li a,
+  .nav-right ul li a {
+    font-size: 12px;
+    padding: 4px;
+  }
+
+  .content {
+    padding-top: 56px; /* Prevent overlap with navbar */
+  }
+
+  .content h1 {
+    margin-top: -24px;
+    font-size: 24px;
+  }
+
+  h2 {
+    font-size: 18px;
+  }
+
+    .features,
+  .feature,
+  .about-startup p,
+  .content p,
+  .testimonial-list blockquote {
+    font-size: 10px;
+  }
+  .about-startup, .features{
+    margin-top:56px;
+  }
+  .explore-btn{
+    width: 70%;
+    font-size: 12px !important;
+  }
+  .reviews h2{
+    font-size: 16px !important;
+  }
+  .reviews{
+    margin-top: -132px !important;
+    width:80%;
+  }
+    .about-startup p{
+    margin-top: -12px;
+  }
+  .explore-btn {
+    font-size: 0.85rem;
+    padding: 6px 14px;
+  }
+
+  .hero-logo img {
+    width: 160px;
+  }
+
+  .hero-logo::before {
+    width: 160px;
+    height: 160px;
+  }
+
+  footer {
+    font-size: 12px;
+  }
+}
+
+/* Reviews Section */
+.reviews {
+  max-width: 900px;
+  margin: 128px auto;
+  padding: 40px 20px;
+  text-align: center;
+}
+
+.reviews h2 {
+  font-family: 'Gefika', sans-serif;
+  font-size: 24px;
+  color: #fe6995;
+  margin-bottom: 24px;
+}
+
+/* Review Form */
+.review-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 600px;
+  margin: 0 auto 40px auto;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+}
+
+.review-form label {
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #fff;
+  font-family: 'adieu', sans-serif;
+}
+
+.review-form input,
+.review-form select,
+.review-form textarea {
+  padding: 10px 14px;
+  border: none;
+  border-radius: 8px;
+  background: #1c181f;
+  color: #fff;
+  font-family: 'adieu', sans-serif;
+  font-size: 13px;
+}
+
+.review-form input:focus,
+.review-form select:focus,
+.review-form textarea:focus {
+  outline: 2px solid #fe6995;
+}
+
+.review-form button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  background: #fe6995;
+  color: #fff;
+  font-family: 'adieu', sans-serif;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.review-form button:hover {
+  background: #d44e3d;
+}
+
+
+/* Review List */
+.review-list {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin: 32px auto 0;   /* centers horizontally */
+  width: 80%;
+  max-width: 700px;      /* keeps it neat on large screens */
+}
+
+.review {
+  text-align: left;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 16px 20px;
+  border-radius: 12px;
+  font-family: 'adieu', sans-serif;
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+}
+
+
+.review strong {
+  color: #fe6995;
+  font-size: 14px;
+}
+
+.review .stars {
+  margin-left: 8px;
+  color: #ffd700;
+}
+
+.review p {
+  margin: 10px 0;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.review small {
+  font-size: 11px;
+  color: #aaa;
+}
+.hidden-review {
+  display: none;
+}
+
+/* Reuse explore-btn style for Show More Reviews */
+#show-more-btn {
+  display: inline-block;
+  margin-top: 20px;
+  padding: 8px 24px;
+  font-family: adieu, sans-serif;
+  font-size: 1em;
+  background-color: #fe6995;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+#show-more-btn:hover {
+  background-color: #d44e3d;
+}
+
+/* --- Mobile header styling --- */
+.mobile-header {
+  display: none; /* hidden on desktop */
+  align-items: center;
+  justify-content: flex-start;
+  padding: 10px 16px;
+  background-color: #151219;
+  position: fixed;
+  width: 100%;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+}
+
+.hamburger-icon {
+  font-size: 26px;
+  color: #fff;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-right: 12px;
+}
+
+.mobile-logo {
+  height: 42px;
+  width: auto;
+}
+/* Hide mobile header + mobile menu by default on desktop */
+.mobile-header,
+.mobile-menu {
+  display: none;
+}
+
+
+/* ---------- MOBILE NAV (<=480px) ---------- */
+@media (max-width: 480px) {
+  .must-try-title{
+    font-size: 1rem !important;
+  }
+    .must-try-scroll {
+    padding: 18px 10px;
+    gap: 16px;
+  }
+
+  .must-try-item {
+    max-width: 190px !important;
+    padding: 12px;
+    border-radius: 16px;
+  }
+
+  .must-try-item img {
+    width: 55%;
+    margin-bottom: 14px;
+  }
+
+  .must-try-item h3 {
+    font-size: 0.8rem;
+  }
+
+  .must-try-item p {
+    font-size: 0.75rem;
+    margin-top: 8px;
+    margin-bottom: 14px;
+  }
+
+  .desktop-nav {
+    display: none;
+  }
+
+  .mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    background: #151219;
+    padding: 10px 14px;
+    z-index: 2000;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .hamburger {
+    font-size: 28px;
+    color: #fe6995;
+    background: none;
+    border: none;
+    cursor: pointer;
+    line-height: 1;
+  }
+
+  .mobile-title {
+    font-family: 'Gefika', sans-serif;
+    color: #fe6995;
+    font-size: 16px;
+    font-weight: 600;
+    text-align: center;
+    letter-spacing: 1px;
+    flex: 1;
+    text-align: center;
+  }
+
+  /* 👤 Profile icon (right side, visible after login) */
+  .profile-icon {
+    font-size: 24px;
+    color: #fe6995;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    display: none; /* hidden before login */
+  }
+
+  .profile-icon:hover {
+    transform: scale(1.1);
+  }
+
+  /* Show only after login */
+  body.logged-in .profile-icon {
+    display: block;
+  }
+
+  /* Mobile dropdown menu */
+  .mobile-menu {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    top: 56px;
+    left: 0;
+    width: 100%;
+    background: #fe6995;
+    overflow: hidden;
+    max-height: 0;
+    opacity: 0;
+    z-index: 1999;
+    transition: all 0.4s ease;
+  }
+
+  .mobile-menu.open {
+    opacity: 1;
+    max-height: 385px;
+    padding: 16px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .mobile-menu ul {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    width: 100%;
+  }
+
+  .mobile-menu li {
+    width: 100%;
+    margin: 10px 0;
+  }
+
+  .mobile-menu a {
+    display: block;
+    text-decoration: none;
+    color: #ffffff;
+    font-size: 17px;
+    font-family: 'Adieu', sans-serif;
+    padding: 12px 0;
+    width: 100%;
+    transition: background 0.3s ease, color 0.3s ease;
+  }
+
+  .mobile-menu a:hover {
+    background: rgba(255, 255, 255, 0.15);
+    color: #151219;
+  }
+
+  .content {
+    transition: margin-top 0.4s ease;
+  }
+
+  body.menu-open .content {
+    margin-top: 340px;
+  }
+
+  body {
+    padding-top: 56px;
+    margin: 0;
+    overflow-x: hidden;
+  }
+  /* ---------- Stylish Hamburger (using ☰ icon) ---------- */
+.hamburger {
+  font-size: 28px;
+  color: #fe6995;
+  background: none;
+  border: none;
+  cursor: pointer;
+  line-height: 1;
+  transition: transform 0.3s ease, color 0.3s ease;
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+
+.hamburger:hover {
+  color: #ff8ab5;
+  transform: scale(1.1);
+  background: rgba(254, 105, 149, 0.08);
+}
+
+.hamburger:active {
+  transform: scale(0.95);
+}
+
+/* When menu is open (optional toggle class from JS) */
+.hamburger.active {
+  transform: rotate(90deg);
+  color: #ffffff;
+}
+}
+
+
+
+
+/* Phones */
+@media (max-width: 480px) {
+  .content {
+    padding-top: 100px;
+  }
+
+  .content h1 {
+    font-size: 16px;
+  }
+
+  h2 {
+    font-size: 12px;
+  }
+
+  .features,
+  .feature,
+  .about-startup p,
+  .content p,
+  .testimonial-list blockquote {
+    font-size: 7px;
+  }
+  .feature{
+    margin-top: -36px;
+  }
+  .features-grid{
+    padding-top: 8px;
+  }
+  .testimonial-list blockquote {
+    margin-top: -16px;
+  }
+  .cta-explore{
+    margin-top: -64px !important;
+  }
+  .explore-btn {
+    font-size: 0.5rem;
+    padding: 3px 8px;
+  }
+
+  .hero-logo img {
+    width: 140px;
+  }
+
+  .hero-logo::before {
+    width: 140px;
+    height: 140px;
+  }
+
+  footer {
+    margin-top: -12px !important;
+    font-size: 8px !important;
+  }
+  .reviews {
+  margin: 64px auto;
+  padding: 20px 12px;
+}
+
+.review-form {
+  padding: 12px;
+  gap: 12px;
+}
+
+.review-form label {
+  font-size: 10px;
+}
+
+.review-form input,
+.review-form select,
+.review-form textarea {
+  font-size: 10px;
+  padding: 8px;
+}
+
+.review-form button {
+  font-size: 10px;
+  padding: 6px 12px;
+}
+
+.review p {
+  font-size: 10px;
+}
+}
+/* Extra small screens */
+@media (max-width: 460px) {
+  .footer-container {
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .footer-section h3,
+  .footer-section h4 {
+    font-size: 0.8rem !important;   /* Slightly smaller Adieu titles */
+  }
+
+  .footer-section p {
+    font-size: 9px;     /* Comfortable mobile size */
+  }
+
+  .footer-bottom {
+    font-size: 12px;
+    margin-top: 30px;
+  }
+}
+@media (max-width: 480px) {
+
+  .info-section {
+    width: 85%;
+    padding: 22px;
+    margin: 100px auto 80px auto;  /* extra bottom space so it doesn't overlap */
+    border-radius: 14px;
+    margin-bottom: 200px;
+  }
+
+  .info-section h2 {
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .info-section h3 {
+    font-size: 10px;
+    margin-top: 18px;
+  }
+
+  .info-section p {
+    font-size: 10px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+
+  .info-section ul li {
+    font-size: 10px;
+    margin-bottom: 2px !important;
+  }
+
+  .info-section ul li::before {
+    font-size: 12px;
+  }
+}

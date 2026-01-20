@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Profile - WheyOnWheels</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Fonts -->
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+
+  <style>
+    .paid-status {
+      color: #5CFF6F;
+      font-weight: 600;
+    }
+
+    .unpaid-status {
+      color: #9e9e9e;
+      font-weight: 600;
+    }
+
+    .reward-note {
+      color: #b3b3b3;
+      font-size: 0.9em;
+      margin-bottom: 10px;
+      font-style: italic;
+    }
+  </style>
+</head>
+
+<body>
+
+<nav class="navbar">
+  <!-- Mobile top bar: hamburger + logo + title -->
+<div class="mobile-header">
+  <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  <span class="mobile-title">WHEY-ON-WHEELS</span>
+
+  {% if session.get('user') %}
+    <a href="/profile" class="mobile-profile">👤</a>
+  {% endif %}
+</div>
+
+  <!-- Desktop container (kept for desktop) -->
+  <div class="navbar-container desktop-nav">
+    <div class="nav-left">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu_select">Menu</a></li>
+        <li><a href="/order_select">Order</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <ul>
+        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="#" id="contact-link">Contact Us</a></li>
+        {% if session.get('user') %}
+          <li><a href="/profile">👤</a></li>
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/menu_select">Menu</a></li>
+      <li><a href="/order_select">Order</a></li>
+      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="#" id="mobile-contact">Contact Us</a></li>
+      {% if session.get('user') %}
+        <li><a href="/profile">👤 Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+
+  <!-- Profile Content -->
+  <div class="profile-container">
+    <h1>Hello, {{ user.username }}</h1>
+    <p>Your reward points: {{ current_rewards or 0 }}</p>
+    <!-- Spin Wheel Section -->
+{% if milestone and not claimed %}
+<div class="spin-section">
+  <h3>🎉 Spin Reward Available!</h3>
+  <p>You have reached your {{ milestone }}th order! Complete the task and earn extra reward points.</p>
+
+  <form action="/verify_spin" method="GET">
+      <input type="hidden" name="milestone" value="{{ milestone }}">
+      <button type="submit" class="spin-btn">Claim Your Spin</button>
+  </form>
+</div>
+{% endif %}
+
+
+    <h2>Order History</h2>
+
+    <table class="order-table">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Order</th>
+          <th>Addons</th>
+          <th>Total Bill</th>
+          <th>Reward Earned</th>
+          <th>Payment Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for order in orders %}
+        <tr>
+          <td>{{ order.order_time }}</td>
+          <td>{{ order.smoothie }}</td>
+          <td>{{ order.addons }}</td>
+          <td>{{ order.total_bill or 0 }}</td>
+          <td>{{ order.rewards_earned }}</td>
+          <td>
+            {% if order.payment_status %}
+              {% if "Paid" in order.payment_status %}
+                <span class="paid-status">{{ order.payment_status }}</span>
+              {% else %}
+                <span class="unpaid-status">{{ order.payment_status }}</span>
+              {% endif %}
+            {% else %}
+              <span class="unpaid-status">Awaiting Payment</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const target = document.querySelector(".about-startup");
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-in");
+          } else {
+            entry.target.classList.remove("animate-in");
+          }
+        });
+      }, {
+        threshold: 0.3
+      });
+
+      if (target) observer.observe(target);
+    });
+  </script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const elements = document.querySelectorAll(".about-startup, .features");
+
+      const observer = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("animate-in");
+          } else {
+            entry.target.classList.remove("animate-in");
+          }
+        });
+      }, {
+        threshold: 0.3
+      });
+
+      elements.forEach(el => observer.observe(el));
+    });
+  </script>
+
+  <script>
+    document.getElementById("scroll-about").addEventListener("click", function (e) {
+      e.preventDefault();
+
+      const profileContainer = document.querySelector(".profile-container");
+
+      if (profileContainer) {
+        const rect = profileContainer.getBoundingClientRect();
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        const targetY = rect.top + scrollTop + rect.height + 60;
+
+        window.scrollTo({
+          top: targetY,
+          behavior: 'smooth'
+        });
+      }
+    });
+  </script>
+
+  <script>
+    document.getElementById("contact-link").addEventListener("click", function (e) {
+      e.preventDefault();
+      alert("You can reach us at: wheyonwheels@gmail.com");
+      window.location.href = "mailto:wheyonwheels@gmail.com";
+    });
+  document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  });
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener('click', function () {
+    const open = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
+    mobileMenu.setAttribute('aria-hidden', !open);
+    hamburger.setAttribute('aria-expanded', open);
+  });
+
+  // Close menu when clicking a link inside it
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+  </script>
+
+    <!-- Footer Section -->
+  <footer class="site-footer">
+  <div class="footer-container">
+
+    <div class="footer-section about">
+      <h3>WheyOnWheels</h3>
+      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+    </div>
+
+    <div class="footer-section contact">
+      <h4>Contact Us</h4>
+      <p>Email: <a href="mailto:wheyonwheelsmumbai@gmail.com">wheyonwheelsmumbai@gmail.com</a></p>
+      <p>Location: Mumbai, India</p>
+    </div>
+
+    <div class="footer-section social">
+      <h4>Follow Us</h4>
+      <div class="social-links">
+        <a href="https://instagram.com/whey_on_wheels" target="_blank">Instagram</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
+</footer>
+</body>
+</html>

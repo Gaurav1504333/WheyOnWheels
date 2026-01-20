@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Verify Spin - WheyOnWheels</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='profile.css') }}">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+</head>
+<style>
+  label{
+    font-family: 'Adieu', sans-serif;
+  }
+/* Clean premium operator input row */
+.order-form-inline {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 14px;
+    margin-top: 30px;
+    font-family: 'Adieu', sans-serif;
+}
+
+/* Label */
+.order-form-inline label {
+    font-size: 20px;
+    color: #ff4f8b;
+    font-weight: 600;
+}
+
+/* Sexy smooth input */
+.operator-input {
+    width: 260px;
+    padding: 8px 12px !important;
+    border-radius: 8px;
+    border: none;
+    background: rgba(255,255,255,0.5);
+    color: white;
+    font-size: 12px;
+    font-family: 'Adieu', sans-serif;
+
+    /* smooth shadow */
+    box-shadow: 0 0 12px rgba(255, 79, 139, 0.25);
+    transition: 0.25s ease;
+}
+
+.operator-input::placeholder {
+    padding:8px;
+    color: rgba(255,255,255,0.55);
+}
+
+.operator-input:focus {
+    outline: none;
+    background: rgba(255,255,255,0.15);
+    box-shadow: 0 0 18px rgba(255, 79, 139, 0.45);
+}
+
+/* Button same height+vibe as input */
+.spin-btn {
+    =padding: 8px 12px;
+    background: #ff4f8b;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    color: white;
+    cursor: pointer;
+    font-family: 'Adieu', sans-serif;
+    transition: 0.25s ease;
+    white-space: nowrap;
+}
+
+.spin-btn:hover {
+    background: #ff1e69;
+    transform: translateY(-2px);
+}
+input[name="operator_code"] {
+  width: 220px;
+  padding: 8px 12px;
+  font-family: 'adieu', sans-serif;
+  font-size: 12px;
+  background: #ffffff;        /* pure white background */
+  border: 1.5px solid #ccc;   /* clean border */
+  border-radius: 8px;         /* soft rounded corners */
+  outline: none;
+  color: #000;
+  box-shadow: none;           /* NO SHADOWS */
+  transition: border 0.2s ease;
+}
+
+input[name="operator_code"]:focus {
+  border: 1.5px solid #6c5ce7;  /* subtle purple highlight (optional, clean) */
+}
+.oc{
+    font-family: 'Adieu', sans-serif;
+}
+input[name="reward_points"] {
+  width: 220px;
+  padding: 8px 12px;
+  font-family: 'adieu', sans-serif;
+  font-size: 12px;
+  background: #ffffff;
+  border: 1.5px solid #ccc;
+  border-radius: 8px;
+  outline: none;
+  color: #000;
+  box-shadow: none;
+  transition: border 0.2s ease;
+}
+
+input[name="reward_points"]:focus {
+  border: 1.5px solid #6c5ce7;
+}
+
+
+</style>
+
+<body>
+
+<!-- NAVBAR (Copied exactly from profile.html) -->
+<nav class="navbar">
+
+  <!-- Mobile header -->
+  <div class="mobile-header">
+    <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <span class="mobile-title">WHEY-ON-WHEELS</span>
+
+    {% if session.get('user') %}
+      <a href="/profile" class="mobile-profile">👤</a>
+    {% endif %}
+  </div>
+
+  <!-- Desktop navbar -->
+  <div class="navbar-container desktop-nav">
+    <div class="nav-left">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu_select">Menu</a></li>
+        <li><a href="/order_select">Order</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <ul>
+        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="#" id="contact-link">Contact Us</a></li>
+        {% if session.get('user') %}
+          <li><a href="/profile">👤</a></li>
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/menu_select">Menu</a></li>
+      <li><a href="/order_select">Order</a></li>
+      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="#" id="mobile-contact">Contact Us</a></li>
+
+      {% if session.get('user') %}
+        <li><a href="/profile">👤 Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+
+</nav>
+
+
+<!-- MAIN CONTENT -->
+<div class="profile-container">
+
+  <h1>Spin Verification</h1>
+  <p>Milestone: <strong>{{ milestone }}</strong></p>
+
+  {% if not valid_code_entered %}
+
+  <!-- Step 1: Operator Code -->
+  <form action="/verify_spin" method="POST" class="order-form">
+    <input type="hidden" name="milestone" value="{{ milestone }}">
+
+    <label class="oc">Operator Code:</label>
+    <input type="password" name="operator_code" placeholder="Enter operator code" required>
+
+    <button type="submit" class="spin-btn">Verify Operator</button>
+  </form>
+
+  {% else %}
+
+  <!-- Step 2: Add reward points -->
+  <h3>Operator Verified: {{ operator_name }}</h3>
+  <p>Location: {{ operator_location }}</p>
+
+  <form action="/verify_spin" method="POST" class="order-form">
+    <input type="hidden" name="milestone" value="{{ milestone }}">
+
+    <label>Reward Points Earned:</label>
+    <input type="number" name="reward_points" placeholder="Enter reward points" min="0" required>
+
+    <button type="submit" class="spin-btn">Confirm Reward</button>
+  </form>
+
+  {% endif %}
+
+  <br><br>
+  <a href="/profile" class="spin-btn" style="display:block;text-align:center;">← Back to Profile</a>
+
+</div>
+
+
+<!-- FOOTER (Copied exactly from profile.html) -->
+<footer class="site-footer">
+  <div class="footer-container">
+
+    <div class="footer-section about">
+      <h3>WheyOnWheels</h3>
+      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+    </div>
+
+    <div class="footer-section contact">
+      <h4>Contact Us</h4>
+      <p>Email: <a href="mailto:wheyonwheelsmumbai@gmail.com">wheyonwheelsmumbai@gmail.com</a></p>
+      <p>Location: Mumbai, India</p>
+    </div>
+
+    <div class="footer-section social">
+      <h4>Follow Us</h4>
+      <div class="social-links">
+        <a href="https://instagram.com/whey_on_wheels" target="_blank">Instagram</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
+</footer>
+
+
+<!-- JS (same as profile.html) -->
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (!hamburger || !mobileMenu) return;
+
+    hamburger.addEventListener('click', function () {
+      const open = mobileMenu.classList.toggle('open');
+      hamburger.classList.toggle('active', open);
+      mobileMenu.setAttribute('aria-hidden', !open);
+      hamburger.setAttribute('aria-expanded', open);
+    });
+
+    mobileMenu.querySelectorAll('a').forEach(a => {
+      a.addEventListener('click', () => {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('active');
+        mobileMenu.setAttribute('aria-hidden', 'true');
+        hamburger.setAttribute('aria-expanded', 'false');
+      });
+    });
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        mobileMenu.classList.remove('open');
+        hamburger.classList.remove('active');
+        mobileMenu.setAttribute('aria-hidden', 'true');
+        hamburger.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

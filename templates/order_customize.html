@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Customize Smoothie | WheyOnWheels</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
+<link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+
+<!-- Google Font: Adieu -->
+<link href="https://fonts.googleapis.com/css2?family=Adieu:wght@600&display=swap" rel="stylesheet">
+
+<style>
+  button[type="submit"] {
+    width: 16% !important;
+    margin: 25px auto 0 !important;
+    border-radius: 16px !important;
+  }
+
+  .customize-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 120px 20px 60px;
+    text-align: center;
+  }
+
+  h1 {
+    font-family: 'Gefika', sans-serif;
+    color: #fe6995;
+    margin-bottom: 50px;
+    font-size: 36px;
+    animation: breathe 2s ease-in-out infinite;
+  }
+
+  @keyframes breathe {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+
+  .dropdown-row {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 25px;
+    flex-wrap: wrap;
+  }
+
+  .dropdown-box {
+    background: #1d1522;
+    padding: 20px;
+    border-radius: 16px;
+    width: 220px;
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  }
+
+  .dropdown-box select {
+    width: 100%;
+    appearance: none;
+    padding: 10px 15px;
+    border-radius: 12px;
+    border: none;
+    background: #2c2331 url("data:image/svg+xml;charset=US-ASCII,<svg xmlns='http://www.w3.org/2000/svg' width='16' height='16'><polygon points='0,0 16,0 8,8' fill='white'/></svg>") no-repeat right 12px center;
+    background-size: 12px;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* Macros text now matches your pink accent */
+  .macros-display {
+    font-size: 13px;
+    margin-top: 10px;
+    color: #fe6995;
+    line-height: 1.4;
+    font-weight: 500;
+  }
+
+  /* Total amount styled with Adieu font */
+  .price-display {
+    font-family: 'Adieu', sans-serif;
+    font-size: 30px;
+    font-weight: 600;
+    margin-top: 35px;
+    color: #fe6995;
+    letter-spacing: 0.5px;
+  }
+  /* 🌸 Place Order Button */
+button[type="submit"] {
+  background-color: #ff007f;
+  border: none;
+  color: white;
+  font-family: 'Adieu', sans-serif;
+  font-size: 1rem;
+  padding: 10px 24px;
+  border-radius: 25px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-block;
+  margin-top: 20px;
+  box-shadow: 0 4px 10px rgba(255, 0, 127, 0.3);
+}
+
+button[type="submit"]:hover {
+  background-color: #ff3399;
+  transform: scale(1.05);
+}
+
+@media (max-width: 768px) {
+  button[type="submit"] {
+    font-size: 0.8rem;
+    padding: 8px 18px;
+    border-radius: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  button[type="submit"] {
+    font-size: 0.7rem;
+    padding: 8px 14px;
+    border-radius: 20px;
+  }
+}
+
+
+  @media screen and (max-width: 768px) {
+    h1, .price-display {
+      font-size: 24px;
+    }
+    .dropdown-box { width: 100%; }
+  }
+  @media (max-width: 768px) {
+  .place-order-btn {
+    font-size: 18px;
+    padding: 10px 32px !important;
+    width: 100% !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .place-order-btn {
+    font-size: 16px;
+    padding: 8px 28px;
+    width: 100% !important;
+  }
+}
+</style>
+</head>
+<body>
+<nav class="navbar">
+  <!-- Mobile top bar: hamburger + logo + title -->
+<div class="mobile-header">
+  <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  <span class="mobile-title">WHEY-ON-WHEELS</span>
+
+  {% if session.get('user') %}
+    <a href="/profile" class="mobile-profile">👤</a>
+  {% endif %}
+</div>
+  <!-- Desktop container (kept for desktop) -->
+  <div class="navbar-container desktop-nav">
+    <div class="nav-left">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu_select">Menu</a></li>
+        <li><a href="/order_select">Order</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <ul>
+        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="#" id="contact-link">Contact Us</a></li>
+        {% if session.get('user') %}
+          <li><a href="/profile">👤</a></li>
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/menu_select">Menu</a></li>
+      <li><a href="/order_select">Order</a></li>
+      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="#" id="mobile-contact">Contact Us</a></li>
+      {% if session.get('user') %}
+        <li><a href="/profile">👤 Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<div class="customize-container">
+  <h1>Customize Your Smoothie</h1>
+
+  <form action="/order_customize" method="POST" id="customize-form">
+    <div class="dropdown-row">
+      {% for category, label in {'base':'Base', 'ingredients':'Ingredients', 'whey':'Whey Flavor', 'toppings':'Toppings', 'addons':'Add-ons'}.items() %}
+      <div class="dropdown-box">
+        <label><b>{{ label }}</b></label><br>
+        <select name="{{ category }}" id="{{ category }}" {% if category in ['base','ingredients','whey'] %}required{% endif %}>
+          <option value="">Choose {{ label }}</option>
+          {% for item in grouped[category] %}
+            <option value="{{ item['name'] }}" 
+                    data-price="{{ item['price'] }}"
+                    data-cal="{{ item['macros']['cal'] }}"
+                    data-protein="{{ item['macros']['protein'] }}"
+                    data-carbs="{{ item['macros']['carbs'] }}"
+                    data-fat="{{ item['macros']['fat'] }}">
+              {{ item['name'] }} (₹{{ item['price'] }})
+            </option>
+          {% endfor %}
+        </select>
+        <div class="macros-display" id="{{ category }}-macros">Calories: 0 | Protein: 0g | Carbs: 0g | Fat: 0g</div>
+      </div>
+      {% endfor %}
+    </div>
+
+    <div class="price-display">Total: ₹<span id="total">0</span></div>
+    <input type="hidden" name="total_price" id="total_price">
+    <button class="btn" type="submit">Place Order</button>
+  </form>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<script>
+const selects = document.querySelectorAll("select");
+const totalEl = document.getElementById("total");
+const totalInput = document.getElementById("total_price");
+
+function launchConfetti() {
+  const duration = 2000;
+  const end = Date.now() + duration;
+  (function frame() {
+    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
+function updatePriceAndMacros() {
+  let total = 0;
+
+  selects.forEach(sel => {
+    const opt = sel.options[sel.selectedIndex];
+    const macrosDiv = document.getElementById(sel.id + "-macros");
+    if (opt && opt.dataset.price) {
+      const price = parseFloat(opt.dataset.price);
+      total += price;
+
+      const cal = parseFloat(opt.dataset.cal) || 0;
+      const protein = parseFloat(opt.dataset.protein) || 0;
+      const carbs = parseFloat(opt.dataset.carbs) || 0;
+      const fat = parseFloat(opt.dataset.fat) || 0;
+
+      macrosDiv.textContent = `Calories: ${cal} | Protein: ${protein}g | Carbs: ${carbs}g | Fat: ${fat}g`;
+    } else {
+      macrosDiv.textContent = "Calories: 0 | Protein: 0g | Carbs: 0g | Fat: 0g";
+    }
+  });
+
+  totalEl.textContent = total.toFixed(2);
+  totalInput.value = total.toFixed(2);
+}
+
+selects.forEach(sel => sel.addEventListener("change", updatePriceAndMacros));
+document.getElementById("customize-form").addEventListener("submit", launchConfetti);
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  });
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener('click', function () {
+    const open = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
+    mobileMenu.setAttribute('aria-hidden', !open);
+    hamburger.setAttribute('aria-expanded', open);
+  });
+
+  // Close menu when clicking a link inside it
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+</script>
+<script>
+  // Animate on scroll
+  document.addEventListener("DOMContentLoaded", function () {
+    const elements = document.querySelectorAll(".about-startup, .features");
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in");
+        } else {
+          entry.target.classList.remove("animate-in");
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    elements.forEach(el => observer.observe(el));
+  });
+
+  // Smooth scroll to About section
+  document.getElementById("scroll-about").addEventListener("click", function (e) {
+    e.preventDefault();
+    window.scrollTo({ top: 1100, behavior: 'smooth' });
+  });
+
+  // Contact email popup
+  document.addEventListener("DOMContentLoaded", function () {
+    const contactLink = document.getElementById("contact-link");
+    if (contactLink) {
+      contactLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        alert("You can reach us at: wheyonwheels@gmail.com");
+        window.location.href = "mailto:wheyonwheels@gmail.com";
+      });
+    }
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("show-more-btn");
+  if (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".hidden-review").forEach(el => {
+        el.style.display = "block";
+      });
+      btn.style.display = "none"; // hide button after showing all
+    });
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  });
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener('click', function () {
+    const open = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
+    mobileMenu.setAttribute('aria-hidden', !open);
+    hamburger.setAttribute('aria-expanded', open);
+  });
+
+  // Close menu when clicking a link inside it
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+
+</script>
+</body>
+</html>

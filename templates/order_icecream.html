@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order Icecream</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    body { overflow-x: hidden; }
+    .ice-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      margin-bottom: 15px;
+    }
+    .ice-group label { flex: 1 1 100%; }
+    .ice-group select,
+    .ice-group input { flex: 1; }
+
+    /* small discount note style */
+    #discountNote {
+      display: none;
+      color: green;
+      margin-top: 6px;
+      font-weight: 600;
+    }
+        .remove-btn {
+      background: #ffffffff;
+      color: white;
+      border: none;
+      margin-top:4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+
+<body>
+
+<!-- Navbar identical to toast page -->
+<nav class="navbar">
+  <div class="mobile-header">
+      <button id="hamburger" class="hamburger" aria-label="Toggle menu">☰</button>
+      <span class="mobile-title">WHEY-ON-WHEELS</span>
+
+      {% if session.get('user') %}
+        <a href="/profile" class="mobile-profile">👤</a>
+      {% endif %}
+  </div>
+
+  <div class="navbar-container desktop-nav">
+      <div class="nav-left">
+          <ul>
+              <li><a href="/">Home</a></li>
+              <li><a href="/menu_select">Menu</a></li>
+              <li><a href="/order_select">Order</a></li>
+          </ul>
+      </div>
+
+      <div class="nav-right">
+          <ul>
+              <li><a href="#" id="scroll-about">About Us</a></li>
+              <li><a href="#" id="contact-link">Contact Us</a></li>
+              {% if session.get('user') %}
+                <li><a href="/profile">👤</a></li>
+                <li><a href="/logout">Logout</a></li>
+              {% else %}
+                <li><a href="/login">Login</a></li>
+              {% endif %}
+          </ul>
+      </div>
+  </div>
+
+  <div id="mobile-menu" class="mobile-menu">
+      <ul>
+         <li><a href="/">Home</a></li>
+         <li><a href="/menu_select">Menu</a></li>
+         <li><a href="/order_select">Order</a></li>
+      </ul>
+  </div>
+</nav>
+
+
+<div class="form-container">
+  <h2>Order Icecream</h2>
+
+  <form method="POST" action="/order_icecream" id="orderForm">
+
+    <div id="iceContainer">
+      <div class="ice-group">
+  <label>Select Icecream & Quantity:</label>
+  <select name="icecream[]" class="icecream">
+    <option value="">None</option>
+    {% for i in icecreams %}
+      <option value="{{ i }}">{{ i }}</option>
+    {% endfor %}
+  </select>
+  <input type="number" name="quantity[]" min="1" value="1">
+  <!-- ❌ No minus button on first scoop -->
+</div>
+
+    </div>
+
+    <div class="add-button" onclick="addIcecream(); calculateTotal();">➕ Add Another Scoop</div>
+
+    <label>
+      <input type="checkbox" id="redeem_toggle">
+      Redeem Reward Points
+    </label>
+    <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
+    <small>You have {{ user_rewards }} reward points</small>
+
+    <div style="margin-top: 20px; font-size: 1.3em; font-weight: bold;">
+      Total Bill: ₹<span id="totalPrice">0</span>
+    </div>
+
+    <div id="discountNote">🎉 10% multi-scoop discount applied (2 or more scoops)</div>
+
+    <button type="submit">Proceed to Pay</button>
+  </form>
+</div>
+<!-- Confetti JS -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<section class="about-startup">
+  <h2>About Us</h2>
+    <p>
+      WheyOnWheels is India’s first mobile protein smoothie truck, dedicated to delivering high-quality nutrition right after your workout.
+      We partner with rising whey brands like Avvatar to bring affordable, delicious, and performance-focused smoothies to fitness enthusiasts.
+      Our trucks operate in major fitness zones and premium areas like Bandra, Andheri, BKC, and Malad. With gamified discounts, loyalty perks, and optional creatine add-ons,
+      we’re not just fueling gains—we’re building a movement.
+    </p>
+</section>
+
+<section class="features">
+  <h2>Why WheyOnWheels?</h2>
+  <div class="features-grid">
+    <div class="feature">
+  <h3>Mobile Convenience</h3>
+  <p>
+    Say goodbye to detours and delays — our smoothie truck parks right outside your gym. Whether it’s post-leg day or a quick protein top-up, we’re steps away with cold, ready-to-blend goodness. Just grab, sip, and go.
+  </p>
+</div>
+
+<div class="feature">
+  <h3>Science-Backed Nutrition</h3>
+  <p>
+    Every smoothie is crafted with premium-grade whey protein, balanced macros, and the option to add creatine & EAAs. Designed in collaboration with certified nutritionists to support real recovery and real gains.
+  </p>
+</div>
+
+<div class="feature">
+  <h3>Fitness Meets Fun</h3>
+  <p>
+    We gamify your grind. Take on mini fitness challenges to unlock discounts, earn loyalty rewards with every sip. Who says serious fitness can’t be seriously fun?
+  </p>
+</div>
+
+  </div>
+</section>
+
+<section class="reviews">
+  <h2>Leave a Review</h2>
+  <form action="/submit_review" method="POST" class="review-form">
+    {% if session.get('user') %}
+      <input type="hidden" name="name" value="{{ session['user']['username'] }}">
+      <p>Reviewing as <strong>{{ session['user']['username'] }}</strong></p>
+    {% else %}
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" name="name" required>
+    {% endif %}
+
+    <label for="comment">Your Review:</label>
+    <textarea id="comment" name="comment" rows="4" required></textarea>
+
+    <button type="submit">Submit Review</button>
+  </form>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const elements = document.querySelectorAll(".about-startup, .features");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      entry.target.classList.toggle("animate-in", entry.isIntersecting);
+    });
+  }, { threshold: 0.3 });
+  elements.forEach((el) => observer.observe(el));
+});
+
+function updateAddonState(group) {
+  const smoothieSel = group.querySelector("select.smoothie");
+  const addonSelects = group.querySelectorAll("select.addon");
+  if (!smoothieSel) return;
+  addonSelects.forEach((addonSel) => {
+    if (!smoothieSel.value) {
+      addonSel.value = "";
+      addonSel.disabled = true;
+      addonSel.style.opacity = "0.5";
+    } else {
+      addonSel.disabled = false;
+      addonSel.style.opacity = "1";
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("smoothie")) {
+    document.querySelector(".form-container").scrollIntoView({ behavior: "smooth" });
+  }
+});
+
+function launchConfetti() {
+  const duration = 3000;
+  const end = Date.now() + duration;
+  (function frame() {
+    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+</script>
+
+
+<script>
+  const prices = {{ prices | tojson }};
+  const icecreams = {{ icecreams | tojson }};
+
+  function normalize(str) { return (str || '').toString().trim().toLowerCase(); }
+
+  function calculateTotal() {
+    let total = 0;
+    let totalScoops = 0;
+
+    document.querySelectorAll(".ice-group").forEach(group => {
+      const icEl = group.querySelector("select.icecream");
+      const qtyEl = group.querySelector("input[type='number']");
+
+      const ic = icEl ? icEl.value : '';
+      const qty = qtyEl ? (parseInt(qtyEl.value) || 1) : 1;
+
+      if (!ic) return;
+
+      const key = Object.keys(prices).find(k => normalize(k) === normalize(ic));
+      if (key) {
+        total += parseFloat(prices[key]) * qty;
+        totalScoops += qty;
+      }
+    });
+
+    // Apply 10% discount if total scoops >= 2
+    const discountNote = document.getElementById("discountNote");
+    if (totalScoops >= 2) {
+      total = total * 0.9;
+      if (discountNote) discountNote.style.display = "block";
+    } else {
+      if (discountNote) discountNote.style.display = "none";
+    }
+
+    // Redeem handling (same as your flow)
+    const toggle = document.getElementById("redeem_toggle");
+    const input = document.getElementById("redeem_points");
+    if (toggle && toggle.checked && input) {
+      const max = parseInt(input.dataset.max) || 0;
+      input.value = max;
+      total -= max;
+    } else if (input) {
+      input.value = 0;
+    }
+
+    if (total < 0) total = 0;
+    document.getElementById("totalPrice").textContent = total.toFixed(2);
+  }
+
+  function addIcecream() {
+    const div = document.createElement("div");
+    div.className = "ice-group";
+
+    const options = icecreams.map(i => `<option value="${i}">${i}</option>`).join("");
+
+    div.innerHTML = `
+      <label>Select Icecream & Quantity:</label>
+
+      <select name="icecream[]" class="icecream">
+        <option value="">None</option>
+        ${options}
+      </select>
+
+      <input type="number" name="quantity[]" min="1" value="1">
+
+      <!-- Minus button ONLY on added scoops -->
+      <button type="button" class="remove-btn" onclick="removeIcecream(this)">➖</button>
+    `;
+
+    document.getElementById("iceContainer").appendChild(div);
+
+    div.querySelectorAll("select, input").forEach(el => {
+        el.addEventListener("change", calculateTotal);
+        el.addEventListener("input", calculateTotal);
+    });
+
+    calculateTotal();
+}
+  function removeIcecream(button) {
+    const group = button.closest(".ice-group");
+    if (group) {
+      group.remove();
+      calculateTotal();
+    }
+  }
+
+  // Initial listeners
+  document.addEventListener("DOMContentLoaded", () => {
+    document.querySelectorAll("select, input").forEach(el => {
+      el.addEventListener("change", calculateTotal);
+      el.addEventListener("input", calculateTotal);
+    });
+
+    calculateTotal();
+  });
+</script>
+<script>
+  // Animate on scroll
+  document.addEventListener("DOMContentLoaded", function () {
+    const elements = document.querySelectorAll(".about-startup, .features");
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in");
+        } else {
+          entry.target.classList.remove("animate-in");
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    elements.forEach(el => observer.observe(el));
+  });
+
+  // Smooth scroll to About section
+  document.getElementById("scroll-about").addEventListener("click", function (e) {
+    e.preventDefault();
+    window.scrollTo({ top: 600, behavior: 'smooth' });
+  });
+
+  // Contact email popup
+  document.addEventListener("DOMContentLoaded", function () {
+    const contactLink = document.getElementById("contact-link");
+    if (contactLink) {
+      contactLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        alert("You can reach us at: wheyonwheels@gmail.com");
+        window.location.href = "mailto:wheyonwheels@gmail.com";
+      });
+    }
+  });
+  document.addEventListener("DOMContentLoaded", function () {
+  const btn = document.getElementById("show-more-btn");
+  if (btn) {
+    btn.addEventListener("click", function () {
+      document.querySelectorAll(".hidden-review").forEach(el => {
+        el.style.display = "block";
+      });
+      btn.style.display = "none"; // hide button after showing all
+    });
+  }
+});
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  });
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener('click', function () {
+    const open = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
+    mobileMenu.setAttribute('aria-hidden', !open);
+    hamburger.setAttribute('aria-expanded', open);
+  });
+
+  // Close menu when clicking a link inside it
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+
+</script>
+<footer class="site-footer">
+  <div class="footer-container">
+
+    <div class="footer-section about">
+      <h3>WheyOnWheels</h3>
+      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+    </div>
+
+    <div class="footer-section contact">
+      <h4>Contact Us</h4>
+      <p>Email: <a href="mailto:wheyonwheelsmumbai@gmail.com">wheyonwheelsmumbai@gmail.com</a></p>
+      <p>Location: Mumbai, India</p>
+    </div>
+
+    <div class="footer-section social">
+      <h4>Follow Us</h4>
+      <div class="social-links">
+        <a href="https://instagram.com/whey_on_wheels" target="_blank">Instagram</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
+</footer>
+
+</body>
+</html>

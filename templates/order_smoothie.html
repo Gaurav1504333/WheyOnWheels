@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Place Order</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      overflow-x: hidden;
+    }
+    .smoothie-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 15px;
+      position: relative;
+    }
+    .smoothie-group label {
+      flex: 1 1 100%;
+      margin-bottom: 5px;
+    }
+    .smoothie-group select,
+    .smoothie-group input[type="number"] {
+      flex: 1;
+      min-width: 0;
+      position: relative;
+      z-index: 1;
+    }
+    .remove-btn {
+      background: #ffffffff;
+      color: white;
+      border: none;
+      margin-top:4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    /* ✅ Force dropdowns to always open downward */
+.smoothie-group select {
+  position: relative !important;
+  transform: translateZ(0) !important;
+  z-index: 10 !important;
+}
+
+.smoothie-group {
+  overflow: visible !important; /* ensures dropdown isn't clipped */
+}
+
+
+    /* ✅ Force dropdown to open downward */
+    select {
+      position: relative;
+      transform: translateZ(0);
+    }
+    select::-ms-expand {
+      display: none; /* hide default arrow IE/Edge */
+    }
+
+    #confettiCanvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    .addon-wrapper {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 8px;
+}
+
+.addon-wrapper select {
+  flex: 1;
+}
+
+.add-addon-btn {
+  background: #ff4da6;
+  color: white;
+  border: none;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+    
+  </style>
+</head>
+<body>
+
+<nav class="navbar">
+  <!-- Mobile top bar: hamburger + logo + title -->
+<div class="mobile-header">
+  <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  <span class="mobile-title">WHEY-ON-WHEELS</span>
+
+  {% if session.get('user') %}
+    <a href="/profile" class="mobile-profile">👤</a>
+  {% endif %}
+</div>
+
+  <!-- Desktop container (kept for desktop) -->
+  <div class="navbar-container desktop-nav">
+    <div class="nav-left">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu_select">Menu</a></li>
+        <li><a href="/order_select">Order</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <ul>
+        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="#" id="contact-link">Contact Us</a></li>
+        {% if session.get('user') %}
+          <li><a href="/profile">👤</a></li>
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/menu_select">Menu</a></li>
+      <li><a href="/order_select">Order</a></li>
+      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="#" id="mobile-contact">Contact Us</a></li>
+      {% if session.get('user') %}
+        <li><a href="/profile">👤 Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<div class="form-container">
+  <h2>Place Your Order</h2>
+  <form method="POST" action="/order_smoothie" id="orderForm">
+    
+    <div id="smoothieContainer">
+      <div class="smoothie-group">
+        <label>Choose a Smoothie and Quantity:</label>
+        <select name="smoothie[]" class="smoothie">
+  <option value="">None</option>
+  {% for item in smoothies %}
+    <option value="{{ item }}"
+      {% if selected_smoothie == item %} selected {% endif %}>
+      {{ item }}
+    </option>
+  {% endfor %}
+</select>
+
+        <input type="number" name="quantity[]" min="1" value="1">
+
+        <div class="addon-wrapper">
+  <select name="addon[][]" class="addon">
+  <option value="">No Addon</option>
+  {% for item in addons %}
+    <option value="{{ item }}">{{ item }}</option>
+  {% endfor %}
+</select>
+
+<button type="button" class="remove-btn" onclick="removeSmoothie(this)" style="display:none;">➖</button>
+
+
+  <!-- ➕ button -->
+  <button type="button" class="add-addon-btn" onclick="addAddon(this)">➕</button>
+</div>
+
+      </div>
+    </div>
+
+    <div class="add-button" onclick="addSmoothie(); calculateTotal();">➕ Add Another Smoothie</div>
+
+    <label>
+      <input type="checkbox" name="useRewards" id="redeem_toggle">
+      Redeem all reward points
+    </label>
+    <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
+    <small>You have {{ user_rewards }} reward points</small>
+
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
+      Total Bill: ₹<span id="totalPrice">0</span>
+    </div>
+    <div id="discountNote" style="display:none; color: green; margin-top: -10px;">
+      🎉 10% multi-smoothie discount applied (2 or more smoothies)
+    </div>
+
+    <button type="submit">Place Order</button>
+  </form>
+</div>
+
+<!-- Confetti JS -->
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+<section class="about-startup">
+  <h2>About Us</h2>
+    <p>
+      WheyOnWheels is India’s first mobile protein smoothie truck, dedicated to delivering high-quality nutrition right after your workout.
+      We partner with rising whey brands like Avvatar to bring affordable, delicious, and performance-focused smoothies to fitness enthusiasts.
+      Our trucks operate in major fitness zones and premium areas like Bandra, Andheri, BKC, and Malad. With gamified discounts, loyalty perks, and optional creatine & EAAs add-ons,
+      we’re not just fueling gains — we’re building a movement.
+    </p>
+</section>
+
+<section class="features">
+  <h2>Why WheyOnWheels?</h2>
+  <div class="features-grid">
+    <div class="feature">
+  <h3>Mobile Convenience</h3>
+  <p>
+    Say goodbye to detours and delays — our smoothie truck parks right outside your gym. Whether it’s post-leg day or a quick protein top-up, we’re steps away with cold, ready-to-blend goodness. Just grab, sip, and go.
+  </p>
+</div>
+
+<div class="feature">
+  <h3>Science-Backed Nutrition</h3>
+  <p>
+    Every smoothie is crafted with premium-grade whey protein, balanced macros, and the option to add creatine & EAAs. Designed in collaboration with certified nutritionists to support real recovery and real gains.
+  </p>
+</div>
+
+<div class="feature">
+  <h3>Fitness Meets Fun</h3>
+  <p>
+    We gamify your grind. Take on mini fitness challenges to unlock discounts, earn loyalty rewards with every sip. Who says serious fitness can’t be seriously fun?
+  </p>
+</div>
+
+  </div>
+</section>
+
+<section class="reviews">
+  <h2>Leave a Review</h2>
+  <form action="/submit_review" method="POST" class="review-form">
+    {% if session.get('user') %}
+      <input type="hidden" name="name" value="{{ session['user']['username'] }}">
+      <p>Reviewing as <strong>{{ session['user']['username'] }}</strong></p>
+    {% else %}
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" name="name" required>
+    {% endif %}
+
+    <label for="comment">Your Review:</label>
+    <textarea id="comment" name="comment" rows="4" required></textarea>
+
+    <button type="submit">Submit Review</button>
+  </form>
+</section>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const elements = document.querySelectorAll(".about-startup, .features");
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      entry.target.classList.toggle("animate-in", entry.isIntersecting);
+    });
+  }, { threshold: 0.3 });
+  elements.forEach((el) => observer.observe(el));
+});
+
+function updateAddonState(group) {
+  const smoothieSel = group.querySelector("select.smoothie");
+  const addonSelects = group.querySelectorAll("select.addon");
+  if (!smoothieSel) return;
+  addonSelects.forEach((addonSel) => {
+    if (!smoothieSel.value) {
+      addonSel.value = "";
+      addonSel.disabled = true;
+      addonSel.style.opacity = "0.5";
+    } else {
+      addonSel.disabled = false;
+      addonSel.style.opacity = "1";
+    }
+  });
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+  const url = new URL(window.location.href);
+  if (url.searchParams.get("smoothie")) {
+    document.querySelector(".form-container").scrollIntoView({ behavior: "smooth" });
+  }
+});
+
+const prices = {{ prices | tojson }};
+const smoothies = {{ smoothies | tojson }};
+const addons = {{ addons | tojson }};
+let discountTriggered = false;
+
+function normalize(str) {
+  return str.trim().toLowerCase();
+}
+
+function launchConfetti() {
+  const duration = 3000;
+  const end = Date.now() + duration;
+  (function frame() {
+    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+    if (Date.now() < end) requestAnimationFrame(frame);
+  })();
+}
+
+function addAddon(button) {
+  const wrapper = button.parentElement;
+  const group = wrapper.parentElement;
+  const clone = wrapper.cloneNode(true);
+  clone.querySelector("select").value = "";
+  clone.querySelector("select").addEventListener("change", calculateTotal);
+  clone.querySelector("select").addEventListener("input", calculateTotal);
+  group.appendChild(clone);
+  updateAddonState(group);
+  calculateTotal();
+}
+
+function calculateTotal() {
+  let total = 0;
+  let smoothieCount = 0;
+
+  document.querySelectorAll(".smoothie-group").forEach((group) => {
+    const smoothie = group.querySelector("select.smoothie").value;
+    const quantity = parseInt(group.querySelector("input").value) || 1;
+
+    const smoothieKey = Object.keys(prices).find(
+      (k) => normalize(k) === normalize(smoothie)
+    );
+    if (!smoothie || !smoothieKey) return;
+
+    const price = parseFloat(prices[smoothieKey]) || 0;
+    total += price * quantity;
+    smoothieCount += quantity;
+
+    const addonSelects = group.querySelectorAll("select.addon");
+    addonSelects.forEach((addonSel) => {
+      const addon = addonSel.value;
+      const addonKey = Object.keys(prices).find(
+        (k) => normalize(k) === normalize(addon)
+      );
+      if (addon && addonKey) {
+        total += parseFloat(prices[addonKey]) || 0;
+      }
+    });
+  });
+
+  const discountNote = document.getElementById("discountNote");
+  if (smoothieCount >= 2) {
+    total *= 0.9;
+    if (discountNote) discountNote.style.display = "block";
+    if (!discountTriggered) {
+      launchConfetti();
+      discountTriggered = true;
+    }
+  } else {
+    if (discountNote) discountNote.style.display = "none";
+    discountTriggered = false;
+  }
+
+  const redeemToggle = document.getElementById("redeem_toggle");
+  const redeemInput = document.getElementById("redeem_points");
+
+  if (redeemToggle && redeemToggle.checked && redeemInput) {
+    const maxRedeem = parseInt(redeemInput.dataset.max) || 0;
+    redeemInput.value = maxRedeem;
+    total -= maxRedeem;
+  } else if (redeemInput) {
+    redeemInput.value = 0;
+  }
+
+  if (total < 0) total = 0;
+  document.getElementById("totalPrice").textContent = total.toFixed(2);
+}
+
+function addSmoothie() {
+  const container = document.getElementById("smoothieContainer");
+  const newGroup = document.createElement("div");
+  newGroup.className = "smoothie-group";
+
+  const smoothieOptions = smoothies
+    .map((item) => `<option value="${item}">${item}</option>`)
+    .join("");
+
+  const addonOptions = addons
+    .map((item) => `<option value="${item}">${item}</option>`)
+    .join("");
+
+  newGroup.innerHTML = `
+    <label>Choose a Smoothie and Quantity:</label>
+
+    <select name="smoothie[]" class="smoothie">
+      <option value="">None</option>
+      ${smoothieOptions}
+    </select>
+
+    <input type="number" name="quantity[]" min="1" value="1">
+
+    <div class="addon-wrapper">
+      <select name="addon[][]" class="addon">
+        <option value="">No Addon</option>
+        ${addonOptions}
+      </select>
+
+      <button type="button" class="add-addon-btn" onclick="addAddon(this)">➕</button>
+      <button type="button" class="remove-btn" onclick="removeSmoothie(this)">➖</button>
+    </div>
+  `;
+
+  container.appendChild(newGroup);
+  updateAddonState(newGroup);
+
+  newGroup.querySelectorAll("select, input").forEach((el) => {
+    el.addEventListener("change", calculateTotal);
+    el.addEventListener("input", calculateTotal);
+  });
+
+  calculateTotal();
+}
+function removeSmoothie(btn){
+  const group = btn.closest(".smoothie-group");
+  group.remove();
+  calculateTotal();
+}
+
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("select.smoothie").forEach((smoothieSel) => {
+    smoothieSel.addEventListener("change", () => {
+      const group = smoothieSel.closest(".smoothie-group");
+      updateAddonState(group);
+      calculateTotal();
+    });
+  });
+
+  document.querySelectorAll("select, input").forEach((el) => {
+    el.addEventListener("change", calculateTotal);
+    el.addEventListener("input", calculateTotal);
+  });
+
+  const redeemToggle = document.getElementById("redeem_toggle");
+  if (redeemToggle) redeemToggle.addEventListener("change", calculateTotal);
+
+  const orderForm = document.getElementById("orderForm");
+  if (orderForm) {
+    orderForm.addEventListener("submit", () => calculateTotal());
+  }
+
+  document.querySelectorAll(".smoothie-group").forEach((group) => {
+    updateAddonState(group);
+  });
+
+  calculateTotal();
+});
+
+document.getElementById("contact-link").addEventListener("click", function (e) {
+  e.preventDefault();
+  alert("You can reach us at: wheyonwheels@gmail.com");
+  window.location.href = "mailto:wheyonwheels@gmail.com";
+});
+
+document.getElementById("scroll-about").addEventListener("click", function (e) {
+  e.preventDefault();
+  window.scrollTo({ top: 600, behavior: "smooth" });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const hamburger = document.getElementById("hamburger");
+  const navLinks = document.getElementById("nav-links");
+  hamburger.addEventListener("click", () => {
+    navLinks.classList.toggle("active");
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
+  const hamburger = document.getElementById("hamburger");
+  const mobileMenu = document.getElementById("mobile-menu");
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener("click", function () {
+    const open = mobileMenu.classList.toggle("open");
+    hamburger.classList.toggle("active", open);
+    mobileMenu.setAttribute("aria-hidden", !open);
+    hamburger.setAttribute("aria-expanded", open);
+  });
+
+  mobileMenu.querySelectorAll("a").forEach((a) => {
+    a.addEventListener("click", () => {
+      mobileMenu.classList.remove("open");
+      hamburger.classList.remove("active");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      hamburger.setAttribute("aria-expanded", "false");
+    });
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      mobileMenu.classList.remove("open");
+      hamburger.classList.remove("active");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      hamburger.setAttribute("aria-expanded", "false");
+    }
+  });
+});
+</script>
+
+
+
+  <!-- Footer Section -->
+  <footer class="site-footer">
+  <div class="footer-container">
+
+    <div class="footer-section about">
+      <h3>WheyOnWheels</h3>
+      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+    </div>
+
+    <div class="footer-section contact">
+      <h4>Contact Us</h4>
+      <p>Email: <a href="mailto:wheyonwheelsmumbai@gmail.com">wheyonwheelsmumbai@gmail.com</a></p>
+      <p>Location: Mumbai, India</p>
+    </div>
+
+    <div class="footer-section social">
+      <h4>Follow Us</h4>
+      <div class="social-links">
+        <a href="https://instagram.com/whey_on_wheels" target="_blank">Instagram</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
+</footer>
+
+
+</body>
+</html>

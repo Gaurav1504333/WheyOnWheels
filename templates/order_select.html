@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Order | WheyOnWheels</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+
+.customize-section {
+  margin-top: 12px;
+  text-align: center;
+}
+
+.customize-btn {
+  display: inline-block;
+  padding: 10px 24px;
+  border-radius: 20px;
+  background: linear-gradient(135deg, #fe6995, #ff85aa);
+  color: white;
+  font-family: 'Adieu', sans-serif;
+  font-size: 16px;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.4);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.customize-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 22px rgba(0,0,0,0.6);
+}
+
+    .order-page {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 140px 20px 60px;
+      text-align: center;
+    }
+
+    .order-page h1 {
+      font-family: 'Gefika', sans-serif;
+      font-size: 36px;
+      color: #fe6995;
+      margin-bottom: 40px;
+      animation: heartbeat 3s ease-in-out infinite;
+    }
+
+    .order-options {
+      display: flex;
+      justify-content: center;
+      gap: 64px;
+      flex-wrap: wrap;
+    }
+
+    .order-card {
+      background-color: #1c181f;
+      border-radius: 20px;
+      padding: 30px 20px;
+      width: 260px;
+      color: #fff;
+      text-decoration: none;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+      box-shadow: 0 6px 18px rgba(0, 0, 0, 0.5);
+      opacity: 0;
+      transform: translateY(20px);
+      animation: fadeUp 1s ease forwards;
+    }
+    .order-card:hover{
+      box-shadow: 0 6px 18px rgba(254, 105, 149, 0.3) !important;
+      transition: transform 0.3s ease, box-shadow 0.3s ease; 
+    }
+
+    .order-card:nth-child(1) { animation-delay: 0.2s; }
+    .order-card:nth-child(2) { animation-delay: 0.4s; }
+    .order-card:nth-child(3) { animation-delay: 0.6s; }
+
+    .order-card:hover {
+      transform: translateY(-10px);
+      box-shadow: 0 10px 22px rgba(0,0,0,0.7);
+    }
+
+    .order-card img {
+      width: 80px;
+      margin-bottom: 16px;
+      filter: drop-shadow(0 4px 8px rgba(0,0,0,0.4));
+    }
+
+    .order-card h3 {
+      font-family: 'Gefika', sans-serif;
+      color: #fe6995;
+      margin-bottom: 10px;
+      font-size: 20px;
+    }
+
+    .order-card p {
+      font-family: 'Adieu', sans-serif;
+      font-size: 13px;
+      color: #ddd;
+      line-height: 1.4;
+    }
+    /* Responsive Design for Order Page */
+@media (max-width: 768px) {
+  .order-page {
+    padding: 100px 15px 40px;
+  }
+
+  .order-page h1 {
+    font-size: 28px;
+    margin-bottom: 30px;
+  }
+
+  .order-options {
+    gap: 32px;
+  }
+
+  .order-card {
+    width: 100%;
+    max-width: 320px;
+    padding: 24px 16px;
+  }
+
+  .order-card img {
+    width: 70px;
+  }
+
+  .order-card h3 {
+    font-size: 18px;
+  }
+
+  .order-card p {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 480px) {
+  .order-page {
+    padding: 80px 10px 30px;
+  }
+
+  .order-page h1 {
+    font-size: 20px;
+  }
+
+  .order-options {
+    flex-direction: column;
+    gap: 24px;
+    align-items: center;
+  }
+
+  .order-card {
+    width: 70%;
+    max-width: 280px;
+    padding: 20px 14px;
+  }
+
+  .order-card img {
+    width: 60px;
+  }
+
+  .order-card h3 {
+    font-size: 16px;
+  }
+
+  .order-card p {
+    font-size: 11px;
+  }
+}
+
+  </style>
+</head>
+<body>
+  <!-- NAVBAR -->
+<nav class="navbar">
+  <!-- Mobile top bar: hamburger + logo + title -->
+<div class="mobile-header">
+  <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+  <span class="mobile-title">WHEY-ON-WHEELS</span>
+
+  {% if session.get('user') %}
+    <a href="/profile" class="mobile-profile">👤</a>
+  {% endif %}
+</div>
+
+  <!-- Desktop container (kept for desktop) -->
+  <div class="navbar-container desktop-nav">
+    <div class="nav-left">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu_select">Menu</a></li>
+        <li><a href="/order_select">Order</a></li>
+      </ul>
+    </div>
+
+    <div class="nav-right">
+      <ul>
+        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="#" id="contact-link">Contact Us</a></li>
+        {% if session.get('user') %}
+          <li><a href="/profile">👤</a></li>
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/menu_select">Menu</a></li>
+      <li><a href="/order_select">Order</a></li>
+      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="#" id="mobile-contact">Contact Us</a></li>
+      {% if session.get('user') %}
+        <li><a href="/profile">👤 Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+
+  <!-- CONTENT -->
+  <div class="order-page">
+    <h1>What would you like to order?</h1>
+    <div class="order-options">
+      <a href="/order_smoothie" class="order-card">
+        <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Smoothie">
+        <h3>High Protein Smoothies</h3>
+        <p>Protein-packed blends designed for recovery and gains.</p>
+      </a>
+      <a href="/order_toast" class="order-card">
+        <img src="{{ url_for('static', filename='snacks.png') }}" alt="Toast">
+        <h3>High Protein Bites</h3>
+        <p>Protein toasts, rice cakes, and laddoos crafted with wholesome ingredients for clean energy.</p>
+      </a>
+      <a href="/order_workout" class="order-card">
+        <img src="{{ url_for('static', filename='drink.png') }}" alt="Workout Drinks">
+        <h3>Intra & Pre-Workout Drinks</h3>
+        <p>Stay fueled with pre-workout or recharged with intra-workout.</p>
+      </a>
+      <a href="/order_icecream" class="order-card">
+        <img src="{{ url_for('static', filename='icecream.png') }}" alt="Ice Cream">
+        <h3>High Protein Ice Cream</h3>
+        <p>Cold, creamy, whey-infused ice cream for guilt-free indulgence.</p>
+      </a>
+    </div>
+  </div>
+  <div class="customize-section">
+  <a href="/order_customize" class="customize-btn">Customize Your Smoothie</a>
+</div>
+
+  <section class="about-startup">
+    <h2>About Us</h2>
+    <p>
+      WheyOnWheels is India’s first mobile protein smoothie truck, dedicated to delivering high-quality nutrition right after your workout.
+      We partner with rising whey brands like Avvatar to bring affordable, delicious, and performance-focused smoothies to fitness enthusiasts.
+      Our trucks operate in major fitness zones and premium areas like Bandra, Andheri, BKC, and Malad. With gamified discounts, loyalty perks, and optional creatine add-ons,
+      we’re not just fueling gains — we’re building a movement.
+    </p>
+  </section>
+  <!-- Features Highlight Section -->
+<section class="features">
+  <h2>Why WheyOnWheels?</h2>
+  <div class="features-grid">
+    <div class="feature">
+  <h3>Mobile Convenience</h3>
+  <p>
+    Say goodbye to detours and delays — our smoothie truck parks right outside your gym. Whether it’s post-leg day or a quick protein top-up, we’re steps away with cold, ready-to-blend goodness. Just grab, sip, and go.
+  </p>
+</div>
+
+<div class="feature">
+  <h3>Science-Backed Nutrition</h3>
+  <p>
+    Every smoothie is crafted with premium-grade whey protein, balanced macros, and the option to add creatine & EAAs. Designed in collaboration with certified nutritionists to support real recovery and real gains.
+  </p>
+</div>
+
+<div class="feature">
+  <h3>Fitness Meets Fun</h3>
+  <p>
+    We gamify your grind. Take on mini fitness challenges to unlock discounts, earn loyalty rewards with every sip. Who says serious fitness can’t be seriously fun?
+  </p>
+</div>
+
+  </div>
+</section>
+
+<!-- Testimonials Section -->
+<section class="reviews">
+  <h2>Leave a Review</h2>
+  <form action="/submit_review" method="POST" class="review-form">
+    {% if session.get('user') %}
+      <input type="hidden" name="name" value="{{ session['user']['username'] }}">
+      <p>Reviewing as <strong>{{ session['user']['username'] }}</strong></p>
+    {% else %}
+      <label for="name">Your Name:</label>
+      <input type="text" id="name" name="name" required>
+    {% endif %}
+
+    <label for="comment">Your Review:</label>
+    <textarea id="comment" name="comment" rows="4" required></textarea>
+
+    <button type="submit">Submit Review</button>
+  </form>
+</section>
+
+  <script>
+  // Animate on scroll
+  document.addEventListener("DOMContentLoaded", function () {
+    const elements = document.querySelectorAll(".about-startup, .features");
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add("animate-in");
+        } else {
+          entry.target.classList.remove("animate-in");
+        }
+      });
+    }, {
+      threshold: 0.3
+    });
+
+    elements.forEach(el => observer.observe(el));
+  });
+
+  // Smooth scroll to About section
+  document.getElementById("scroll-about").addEventListener("click", function (e) {
+    e.preventDefault();
+    window.scrollTo({ top: 600, behavior: 'smooth' });
+  });
+
+  // Contact email popup
+  document.addEventListener("DOMContentLoaded", function () {
+    const contactLink = document.getElementById("contact-link");
+    if (contactLink) {
+      contactLink.addEventListener("click", function (e) {
+        e.preventDefault();
+        alert("You can reach us at: wheyonwheels@gmail.com");
+        window.location.href = "mailto:wheyonwheels@gmail.com";
+      });
+    }
+  });
+document.addEventListener('DOMContentLoaded', () => {
+    const hamburger = document.getElementById('hamburger');
+    const navLinks = document.getElementById('nav-links');
+
+    hamburger.addEventListener('click', () => {
+      navLinks.classList.toggle('active');
+    });
+  });
+document.addEventListener('DOMContentLoaded', function () {
+  const hamburger = document.getElementById('hamburger');
+  const mobileMenu = document.getElementById('mobile-menu');
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener('click', function () {
+    const open = mobileMenu.classList.toggle('open');
+    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
+    mobileMenu.setAttribute('aria-hidden', !open);
+    hamburger.setAttribute('aria-expanded', open);
+  });
+
+  // Close menu when clicking a link inside it
+  mobileMenu.querySelectorAll('a').forEach(a => {
+    a.addEventListener('click', () => {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    });
+  });
+
+  // Close on Escape key
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      mobileMenu.classList.remove('open');
+      hamburger.classList.remove('active'); // ✅ reset animation
+      mobileMenu.setAttribute('aria-hidden', 'true');
+      hamburger.setAttribute('aria-expanded', 'false');
+    }
+  });
+});
+</script>
+
+
+  <!-- FOOTER -->
+  <!-- Footer Section -->
+  <footer class="site-footer">
+  <div class="footer-container">
+
+    <div class="footer-section about">
+      <h3>WheyOnWheels</h3>
+      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+    </div>
+
+    <div class="footer-section contact">
+      <h4>Contact Us</h4>
+      <p>Email: <a href="mailto:wheyonwheelsmumbai@gmail.com">wheyonwheelsmumbai@gmail.com</a></p>
+      <p>Location: Mumbai, India</p>
+    </div>
+
+    <div class="footer-section social">
+      <h4>Follow Us</h4>
+      <div class="social-links">
+        <a href="https://instagram.com/whey_on_wheels" target="_blank">Instagram</a>
+      </div>
+    </div>
+
+  </div>
+
+  <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
+</footer>
+
+</body>
+</html>
