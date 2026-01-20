@@ -132,11 +132,22 @@ def order_smoothie():
         smoothies, addons, prices = [], [], {}
 
     # -------------------------------------------------
-    # Fetch user's reward points
+    # Fetch user's reward points (SAFE)
     # -------------------------------------------------
-    cursor.execute("SELECT points FROM rewards WHERE user_id = %s", (user_id,))
-    result = cursor.fetchone()
-    user_rewards = int(result['points']) if result and result.get('points') is not None else 0
+    user_rewards = 0
+    db = get_db_connection()
+    if db:
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("SELECT points FROM rewards WHERE user_id = %s", (user_id,))
+            result = cursor.fetchone()
+            user_rewards = int(result['points']) if result and result.get('points') is not None else 0
+        except Exception as e:
+            print("❌ Reward fetch error:", e)
+            user_rewards = 0
+        finally:
+            cursor.close()
+            db.close()
 
     # -------------------------------------------------
     # Handle POST (order submission)
@@ -144,12 +155,13 @@ def order_smoothie():
     if request.method == 'POST':
         smoothie_list = request.form.getlist('smoothie[]')
         quantity_list = request.form.getlist('quantity[]')
-        # Robust addon collection: catch addon[], addon[][], addon, etc.
+
+        # Robust addon collection
         addon_list = []
         for key in request.form.keys():
             if key.startswith('addon'):
                 addon_list.extend([v for v in request.form.getlist(key) if v and v.strip()])
-        # fallback for legacy single-named field
+
         if not addon_list:
             addon_list = [a for a in request.form.getlist('addon[]') if a and a.strip()]
 
@@ -172,7 +184,7 @@ def order_smoothie():
             return redirect('/order_smoothie')
 
         # -------------------------------------------------
-        # Calculate total (handles multiple addons correctly)
+        # Calculate total
         # -------------------------------------------------
         total_bill = 0.0
         total_smoothies = 0
@@ -184,20 +196,18 @@ def order_smoothie():
                 total_bill += price * qty
                 total_smoothies += qty
 
-        # Add all addons collected (multiple addons per smoothie or global addons)
         for a in addon_list:
             if a and a.strip():
                 addon_price = float(prices.get(a.strip(), 0) or 0)
                 total_bill += addon_price
 
-        # Apply 10% discount for 2+ smoothies
         if total_smoothies >= 2:
             total_bill *= 0.9
 
         total_bill = round(total_bill, 2)
 
         # -------------------------------------------------
-        # Reward system (no DB update here)
+        # Rewards
         # -------------------------------------------------
         reward_used = min(redeem_points, total_bill, user_rewards)
         total_after_rewards = round(total_bill - reward_used, 2)
@@ -213,20 +223,17 @@ def order_smoothie():
             'addons': addon_str,
             'quantity': ','.join(quantity_list),
             'total_bill': total_bill,
-            'smoothie_price': total_bill,   # <-- ensure payment page uses exact computed total
+            'smoothie_price': total_bill,
             'reward_used': reward_used,
             'reward_earned': reward_earned,
             'total_after_rewards': total_after_rewards
         }
 
-        # -------------------------------------------------
-        # Redirect to payment page
-        # -------------------------------------------------
         flash(f"Smoothie order added. Total after rewards: ₹{total_after_rewards}", "info")
         return redirect('/payment_page')
 
     # -------------------------------------------------
-    # GET request — show order page
+    # GET request
     # -------------------------------------------------
     return render_template(
         'order_smoothie.html',
@@ -234,7 +241,8 @@ def order_smoothie():
         addons=addons,
         prices=prices,
         user_rewards=user_rewards
-    )    
+    )
+
     
 @app.route('/order_toast', methods=['GET', 'POST'])
 def order_toast():
@@ -247,17 +255,10 @@ def order_toast():
         df = pd.read_csv(Toast_MENU_CSV_URL)
         df.fillna('', inplace=True)
 
-        # ---------------------------------
-        # Column index mapping
-        # 0 → Category
-        # 1 → Item Name
-        # 4 → Price (₹)
-        # ---------------------------------
-
-        # Toast names for dropdown (15 rows, 2nd column)
+        # Toast names for dropdown
         toasts = df.iloc[0:15, 1].dropna().tolist()
 
-        # Clean price column (₹ handling)
+        # Clean price column
         df.iloc[:, 4] = (
             df.iloc[:, 4]
             .astype(str)
@@ -267,13 +268,11 @@ def order_toast():
 
         df.iloc[:, 4] = pd.to_numeric(df.iloc[:, 4], errors="coerce").fillna(0)
 
-        # Backend prices → normalized keys
         prices_backend = {
             str(name).strip().lower(): float(price)
             for name, price in zip(df.iloc[:, 1], df.iloc[:, 4])
         }
 
-        # Frontend prices → original item names
         prices_frontend = {
             str(name): float(price)
             for name, price in zip(df.iloc[:, 1], df.iloc[:, 4])
@@ -285,11 +284,22 @@ def order_toast():
         toasts, prices_backend, prices_frontend = [], {}, {}
 
     # ---------------------------------
-    # Fetch user rewards
+    # Fetch user rewards (SAFE)
     # ---------------------------------
-    cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
-    result = cursor.fetchone()
-    user_rewards = int(result['points']) if result and result.get('points') is not None else 0
+    user_rewards = 0
+    db = get_db_connection()
+    if db:
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
+            result = cursor.fetchone()
+            user_rewards = int(result['points']) if result and result.get('points') is not None else 0
+        except Exception as e:
+            print("❌ Reward fetch error:", e)
+            user_rewards = 0
+        finally:
+            cursor.close()
+            db.close()
 
     # ---------------------------------
     # POST → submit order
@@ -329,7 +339,6 @@ def order_toast():
                 total_bill += price * qty
                 total_items += qty
 
-        # 10% discount on 2+ items
         if total_items >= 2:
             total_bill *= 0.9
 
@@ -373,6 +382,7 @@ def order_toast():
     )
 
 
+
 from itertools import zip_longest
 
 @app.route('/order_workout', methods=['GET', 'POST'])
@@ -400,11 +410,22 @@ def order_workout():
         workouts, addons, combos, prices = [], [], [], {}
 
     # -------------------------------------------------
-    # Get rewards balance
+    # Get rewards balance (SAFE)
     # -------------------------------------------------
-    cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
-    result = cursor.fetchone()
-    user_rewards = int(result['points']) if result and result.get('points') else 0
+    user_rewards = 0
+    db = get_db_connection()
+    if db:
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
+            result = cursor.fetchone()
+            user_rewards = int(result['points']) if result and result.get('points') else 0
+        except Exception as e:
+            print("❌ Reward fetch error:", e)
+            user_rewards = 0
+        finally:
+            cursor.close()
+            db.close()
 
     # -------------------------------------------------
     # POST REQUEST
@@ -496,7 +517,7 @@ def order_workout():
             'combo_qty': combo_qty,
             'quantity_list': quantity_list,
             'total_bill': total_bill,
-            'discount_applied': discount_applied,   # <<<<<< NEW
+            'discount_applied': discount_applied,
 
             # Required in payment_page
             'reward_used': reward_used,
@@ -678,10 +699,8 @@ def order_icecream():
         df = pd.read_csv(ICECREAM_MENU_CSV_URL)
         df.fillna('', inplace=True)
 
-        # Extract icecream names (Item Name column)
         icecreams = df["Item Name"].dropna().tolist()
 
-        # Clean & extract price column safely
         df["Price (₹)"] = (
             df["Price (₹)"]
             .astype(str)
@@ -698,10 +717,23 @@ def order_icecream():
         flash("Unable to load icecream menu. Please try again.", "error")
         icecreams, prices = [], {}
 
-    # Fetch user rewards
-    cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
-    result = cursor.fetchone()
-    user_rewards = int(result['points']) if result else 0
+    # ---------------------------------
+    # Fetch user rewards (SAFE)
+    # ---------------------------------
+    user_rewards = 0
+    db = get_db_connection()
+    if db:
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
+            result = cursor.fetchone()
+            user_rewards = int(result['points']) if result and result.get('points') is not None else 0
+        except Exception as e:
+            print("❌ Reward fetch error:", e)
+            user_rewards = 0
+        finally:
+            cursor.close()
+            db.close()
 
     # -----------------------------
     # POST → submit order
@@ -709,9 +741,12 @@ def order_icecream():
     if request.method == 'POST':
         icecream_list = request.form.getlist('icecream[]')
         quantity_list = request.form.getlist('quantity[]')
-        redeem_points = int(request.form.get('redeem_points', 0))
 
-        # Create "Vanilla x2, Chocolate x1" format
+        try:
+            redeem_points = int(request.form.get('redeem_points', 0))
+        except:
+            redeem_points = 0
+
         icecream_data = [
             f"{item} x{qty}"
             for item, qty in zip(icecream_list, quantity_list)
@@ -735,7 +770,6 @@ def order_icecream():
                 total_bill += price * qty
                 total_items += qty
 
-        # 10% discount on 2+ items
         if total_items >= 2:
             total_bill *= 0.90
 
@@ -746,7 +780,6 @@ def order_icecream():
         total_after_rewards = round(total_bill - reward_used, 2)
         reward_earned = int(round(total_after_rewards * 0.06))
 
-        # Store for payment page
         session['pending_order'] = {
             'type': 'normal',
             'category': 'icecream',
@@ -772,6 +805,7 @@ def order_icecream():
         user_rewards=user_rewards
     )
 
+
 @app.route('/payment_page', methods=['GET', 'POST'])
 def payment_page():
     if 'user' not in session:
@@ -784,208 +818,189 @@ def payment_page():
 
     user_id = session['user']['user_id']
 
-
-    # ---------------------- REWARD LOAD --------------------------
-    cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
-    result = cursor.fetchone()
-
-    if not result:
-        cursor.execute("INSERT INTO rewards (user_id, points) VALUES (%s, 0)", (user_id,))
-        db.commit()
-        current_rewards = 0
-    else:
-        current_rewards = int(result["points"])
-
-
-    # ---------------------- OPERATORS ----------------------------
-    import requests, csv, io
-    SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
-    operator_data = {}
+    # ---------------------- DB CONNECT --------------------------
+    db = get_db_connection()
+    if not db:
+        flash("Database temporarily unavailable.", "error")
+        return redirect('/')
 
     try:
-        response = requests.get(SHEET_URL, timeout=6)
-        csv_data = list(csv.reader(io.StringIO(response.text)))
+        cursor = db.cursor(dictionary=True)
 
-        for row in csv_data[1:]:
-            if len(row) >= 3:
-                operator_data[row[1].strip()] = {
-                    "name": row[0].strip(),
-                    "location": row[2].strip()
-                }
-    except:
-        pass
+        # ---------------------- REWARD LOAD --------------------------
+        cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
+        result = cursor.fetchone()
 
+        if not result:
+            cursor.execute("INSERT INTO rewards (user_id, points) VALUES (%s, 0)", (user_id,))
+            db.commit()
+            current_rewards = 0
+        else:
+            current_rewards = int(result["points"])
 
-    valid_code_entered = session.get("valid_code_entered", False)
-    operator_code = session.get("operator_code", "")
-    operator_name = session.get("operator_name", "")
-    operator_location = session.get("operator_location", "")
+        # ---------------------- OPERATORS ----------------------------
+        import requests, csv, io
+        SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
+        operator_data = {}
 
-    def safe_float(v, f=0.0):
-        try: return float(v)
-        except: return f
+        try:
+            response = requests.get(SHEET_URL, timeout=6)
+            csv_data = list(csv.reader(io.StringIO(response.text)))
 
-    def safe_int(v, f=0):
-        try: return int(float(v))
-        except: return f
+            for row in csv_data[1:]:
+                if len(row) >= 3:
+                    operator_data[row[1].strip()] = {
+                        "name": row[0].strip(),
+                        "location": row[2].strip()
+                    }
+        except:
+            pass
 
+        valid_code_entered = session.get("valid_code_entered", False)
+        operator_code = session.get("operator_code", "")
+        operator_name = session.get("operator_name", "")
+        operator_location = session.get("operator_location", "")
 
-    # ------------------ ALWAYS USE STORED VALUES -------------------
-    # ------------------ ALWAYS USE STORED VALUES -------------------
-    total_bill = safe_float(pending_order.get("total_bill"))
-    reward_used = safe_int(pending_order.get("reward_used"))
-    reward_earned = safe_int(pending_order.get("reward_earned"))
-    discount_applied = pending_order.get("discount_applied", False)
+        def safe_float(v, f=0.0):
+            try: return float(v)
+            except: return f
 
-    # If discount applied, ensure payment page uses the same discounted bill
-    if discount_applied:
+        def safe_int(v, f=0):
+            try: return int(float(v))
+            except: return f
+
+        # ------------------ ALWAYS USE STORED VALUES -------------------
         total_bill = safe_float(pending_order.get("total_bill"))
+        reward_used = safe_int(pending_order.get("reward_used"))
+        reward_earned = safe_int(pending_order.get("reward_earned"))
+        discount_applied = pending_order.get("discount_applied", False)
 
+        if discount_applied:
+            total_bill = safe_float(pending_order.get("total_bill"))
 
-    # ensure reward_used never exceeds reward balance
-    reward_used = min(reward_used, current_rewards)
+        reward_used = min(reward_used, current_rewards)
+        total_after_rewards = round(max(total_bill - reward_used, 0), 2)
 
-    # compute total_after_rewards
-    total_after_rewards = round(max(total_bill - reward_used, 0), 2)
+        # ------------------------- POST -------------------------------
+        if request.method == "POST":
+            operator_code_form = request.form.get("operator_code", "").strip()
+            payment_mode = request.form.get("payment_mode", "").lower()
 
+            if operator_code_form and not payment_mode:
+                if operator_code_form in operator_data:
+                    session["valid_code_entered"] = True
+                    session["operator_code"] = operator_code_form
+                    session["operator_name"] = operator_data[operator_code_form]["name"]
+                    session["operator_location"] = operator_data[operator_code_form]["location"]
+                    flash(f"Operator verified: {operator_data[operator_code_form]['name']}", "success")
+                else:
+                    flash("Invalid operator code.", "error")
+                return redirect("/payment_page")
 
-    # ------------------------- POST -------------------------------
-    if request.method == "POST":
-        operator_code_form = request.form.get("operator_code", "").strip()
-        payment_mode = request.form.get("payment_mode", "").lower()
+            if not payment_mode:
+                flash("Please select a payment mode.", "error")
+                return redirect("/payment_page")
 
-        if operator_code_form and not payment_mode:
-            if operator_code_form in operator_data:
-                session["valid_code_entered"] = True
-                session["operator_code"] = operator_code_form
-                session["operator_name"] = operator_data[operator_code_form]["name"]
-                session["operator_location"] = operator_data[operator_code_form]["location"]
-                flash(f"Operator verified: {operator_data[operator_code_form]['name']}", "success")
+            if operator_code_form and operator_code_form in operator_data:
+                oc = operator_code_form
+                on = operator_data[operator_code_form]["name"]
+                ol = operator_data[operator_code_form]["location"]
+            elif valid_code_entered:
+                oc = operator_code
+                on = operator_name
+                ol = operator_location
             else:
-                flash("Invalid operator code.", "error")
-            return redirect("/payment_page")
+                oc = on = ol = None
 
-        if not payment_mode:
-            flash("Please select a payment mode.", "error")
-            return redirect("/payment_page")
+            qty_raw = pending_order.get("quantity_list") or pending_order.get("quantity") or "1"
+            quantity_clean = ",".join(qty_raw) if isinstance(qty_raw, list) else str(qty_raw)
 
-        # operator assignment
-        if operator_code_form and operator_code_form in operator_data:
-            oc = operator_code_form
-            on = operator_data[operator_code_form]["name"]
-            ol = operator_data[operator_code_form]["location"]
-        elif valid_code_entered:
-            oc = operator_code
-            on = operator_name
-            ol = operator_location
-        else:
-            oc = on = ol = None
+            # ----------------- UPDATE REWARDS ---------------------
+            new_points = max(current_rewards - reward_used, 0)
+            new_points += reward_earned
 
-
-        # ----------------- FIX: CLEAN QUANTITY -----------------------
-        qty_raw = pending_order.get("quantity_list") or pending_order.get("quantity") or "1"
-
-        if isinstance(qty_raw, list):
-            quantity_clean = ",".join(qty_raw)
-        else:
-            quantity_clean = str(qty_raw)
-
-
-        # ----------------- UPDATE REWARDS SAFELY ---------------------
-        new_points = max(current_rewards - reward_used, 0)
-        new_points += reward_earned
-
-        cursor.execute(
-            "UPDATE rewards SET points=%s WHERE user_id=%s",
-            (new_points, user_id)
-        )
-        db.commit()
-
-        # refresh session reward
-        session['user']['reward_points'] = new_points
-
-
-        # ----------------- INSERT ORDER ------------------------------
-        cursor.execute("""
-            INSERT INTO orders (
-                user_id, name, contact,
-                smoothie, toast, icecream, workout,
-                quantity, addons, combo,
-                order_time, total_bill,
-                reward_points_used, reward_points_earned,
-                payment_mode
+            cursor.execute(
+                "UPDATE rewards SET points=%s WHERE user_id=%s",
+                (new_points, user_id)
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                    NOW(),%s,%s,%s,%s)
-        """, (
-            user_id,
-            session['user']['username'],
-            session['user']['phone'],
 
-            pending_order.get("smoothie", ""),
-            pending_order.get("toast", ""),
-            pending_order.get("icecream", ""),
-            pending_order.get("workout", ""),
-            quantity_clean,                        # << FIXED
-            pending_order.get("addons", ""),
-            pending_order.get("combo", ""),
-
-            total_after_rewards,                   # what user paid
-            reward_used,
-            reward_earned,
-            payment_mode
-        ))
-
-        order_id = cursor.lastrowid
-
-
-        if oc:
+            # ----------------- INSERT ORDER ------------------------------
             cursor.execute("""
-                INSERT INTO operator_orders (
-                    operator_name, operator_code, operator_location,
-                    order_id, user_id, total_amount,
-                    payment_mode, order_type
+                INSERT INTO orders (
+                    user_id, name, contact,
+                    smoothie, toast, icecream, workout,
+                    quantity, addons, combo,
+                    order_time, total_bill,
+                    reward_points_used, reward_points_earned,
+                    payment_mode
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                        NOW(),%s,%s,%s,%s)
             """, (
-                on, oc, ol,
-                order_id, user_id,
+                user_id,
+                session['user']['username'],
+                session['user']['phone'],
+                pending_order.get("smoothie", ""),
+                pending_order.get("toast", ""),
+                pending_order.get("icecream", ""),
+                pending_order.get("workout", ""),
+                quantity_clean,
+                pending_order.get("addons", ""),
+                pending_order.get("combo", ""),
                 total_after_rewards,
-                payment_mode,
-                pending_order.get("type", "normal")
+                reward_used,
+                reward_earned,
+                payment_mode
             ))
 
+            order_id = cursor.lastrowid
 
-        db.commit()
+            if oc:
+                cursor.execute("""
+                    INSERT INTO operator_orders (
+                        operator_name, operator_code, operator_location,
+                        order_id, user_id, total_amount,
+                        payment_mode, order_type
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    on, oc, ol,
+                    order_id, user_id,
+                    total_after_rewards,
+                    payment_mode,
+                    pending_order.get("type", "normal")
+                ))
 
-        # clean session
-        for k in ["pending_order", "valid_code_entered",
-                  "operator_code", "operator_name", "operator_location"]:
-            session.pop(k, None)
+            db.commit()
 
-        flash(f"Payment successful! Paid ₹{total_after_rewards}", "success")
-        return redirect("/profile")
+            for k in ["pending_order", "valid_code_entered",
+                      "operator_code", "operator_name", "operator_location"]:
+                session.pop(k, None)
 
+            flash(f"Payment successful! Paid ₹{total_after_rewards}", "success")
+            return redirect("/profile")
 
+        # ------------------ GET ----------------------
+        order_for_display = pending_order.copy()
+        order_for_display["total_bill"] = total_after_rewards
 
-    # ------------------ GET ----------------------
-    order_for_display = pending_order.copy()
-    order_for_display["total_bill"] = total_after_rewards
+        return render_template(
+            "payment_page.html",
+            order=order_for_display,
+            valid_code_entered=valid_code_entered,
+            operator_name=operator_name,
+            operator_code=operator_code,
+            operator_location=operator_location,
+            current_rewards=current_rewards,
+            total_bill=total_bill,
+            total_after_rewards=total_after_rewards,
+            reward_used=reward_used,
+            reward_earned=reward_earned
+        )
 
-    return render_template(
-        "payment_page.html",
-        order=order_for_display,
-        valid_code_entered=valid_code_entered,
-        operator_name=operator_name,
-        operator_code=operator_code,
-        operator_location=operator_location,
-        current_rewards=current_rewards,
-        total_bill=total_bill,
-        total_after_rewards=total_after_rewards,
-        reward_used=reward_used,
-        reward_earned=reward_earned
-    )
-
+    finally:
+        cursor.close()
+        db.close()
 
 
 @app.route('/signup', methods=['GET', 'POST'])
@@ -1022,9 +1037,15 @@ def signup():
             return redirect('/signup')
 
         # --------------------
-        # Insert Into Database
+        # Insert Into Database (SAFE)
         # --------------------
+        db = get_db_connection()
+        if not db:
+            flash("Database temporarily unavailable.", "error")
+            return redirect('/signup')
+
         try:
+            cursor = db.cursor(dictionary=True)
             cursor.execute("""
                 INSERT INTO users (username, email, phone, birthday, gender, goal)
                 VALUES (%s, %s, %s, %s, %s, %s)
@@ -1039,34 +1060,51 @@ def signup():
             flash("Email already exists. Please try logging in.", "error")
             return redirect('/signup')
 
+        finally:
+            cursor.close()
+            db.close()
+
     return render_template('signup.html')
+
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         phone = request.form.get('phone')
 
-        cursor.execute("SELECT * FROM users WHERE phone = %s", (phone,))
-        user = cursor.fetchone()
-
-        if user:
-            session['user'] = {
-                'username': user['username'],
-                'email': user['email'],
-                'phone': user['phone'],
-                'user_id': user['user_id']
-            }
-            flash(f"Welcome, {user['username']}!", "success")
-            return redirect('/')
-        else:
-            flash("Phone number not found. Please sign up.", "error")
+        db = get_db_connection()
+        if not db:
+            flash("Database temporarily unavailable.", "error")
             return redirect('/login')
+
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("SELECT * FROM users WHERE phone = %s", (phone,))
+            user = cursor.fetchone()
+
+            if user:
+                session['user'] = {
+                    'username': user['username'],
+                    'email': user['email'],
+                    'phone': user['phone'],
+                    'user_id': user['user_id']
+                }
+                flash(f"Welcome, {user['username']}!", "success")
+                return redirect('/')
+            else:
+                flash("Phone number not found. Please sign up.", "error")
+                return redirect('/login')
+
+        finally:
+            cursor.close()
+            db.close()
+
     return render_template('login.html')
 
 @app.route('/logout')
 def logout():
-    session.clear()  # clears the user session
-    return redirect(url_for('home'))  # redirect to your home page
+    session.clear()
+    return redirect(url_for('home'))
 
 
 from datetime import datetime
@@ -1082,7 +1120,13 @@ def profile():
 
     user_id = session['user']['user_id']
 
+    db = get_db_connection()
+    if not db:
+        flash("Database temporarily unavailable.", "error")
+        return redirect('/')
+
     try:
+        cursor = db.cursor(dictionary=True)
         formatted_orders = []
 
         # --------------------------------------------
@@ -1195,12 +1239,11 @@ def profile():
         )
 
         # --------------------------------------------
-        # REWARD BALANCE (FIXED VERSION)
+        # REWARD BALANCE
         # --------------------------------------------
         cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
         result = cursor.fetchone()
 
-        # Auto-create reward record if missing
         if not result:
             cursor.execute("INSERT INTO rewards (user_id, points) VALUES (%s, 0)", (user_id,))
             db.commit()
@@ -1241,13 +1284,24 @@ def profile():
         flash("Error loading profile data.", "error")
         return redirect('/')
 
+    finally:
+        cursor.close()
+        db.close()
+
 
 def confirm_payment(order_id, payment_mode):
     """
     Call this function once payment is successful.
     Updates the order's payment_mode and adds earned reward points to user's account.
     """
+    db = get_db_connection()
+    if not db:
+        print("❌ DB unavailable during payment confirmation")
+        return False
+
     try:
+        cursor = db.cursor(dictionary=True)
+
         cursor.execute("SELECT user_id, reward_points_earned FROM orders WHERE order_id=%s", (order_id,))
         order = cursor.fetchone()
         if not order:
@@ -1265,10 +1319,16 @@ def confirm_payment(order_id, payment_mode):
         db.commit()
         print(f"✅ Payment confirmed and {earned_points} reward points added for user {user_id}")
         return True
+
     except Exception as e:
         print("❌ Payment confirmation error:", e)
         db.rollback()
         return False
+
+    finally:
+        cursor.close()
+        db.close()
+
     
     
 @app.route("/claim_spin", methods=["POST"])
@@ -1279,31 +1339,39 @@ def claim_spin():
     user_id = session["user"]["user_id"]
     milestone = int(request.form["milestone"])
 
-    cursor = mysql.connection.cursor()
+    SPIN_REWARD_POINTS = 25
 
-    # How many points to give for spin challenge? 
-    SPIN_REWARD_POINTS = 25    # change if you want
+    db = get_db_connection()
+    if not db:
+        flash("Database temporarily unavailable.", "error")
+        return redirect("/profile")
 
-    # Create spin record if not already claimed
-    cursor.execute("""
-        INSERT INTO spin_claims (user_id, milestone, claimed)
-        SELECT %s, %s, TRUE FROM DUAL
-        WHERE NOT EXISTS (
-            SELECT 1 FROM spin_claims WHERE user_id=%s AND milestone=%s
-        )
-    """, (user_id, milestone, user_id, milestone))
-    
-    # Add reward points to user account
-    cursor.execute("""
-        INSERT INTO rewards (user_id, points)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE points = points + VALUES(points)
-    """, (user_id, SPIN_REWARD_POINTS))
+    try:
+        cursor = db.cursor(dictionary=True)
 
-    mysql.connection.commit()
+        cursor.execute("""
+            INSERT INTO spin_claims (user_id, milestone, claimed)
+            SELECT %s, %s, TRUE FROM DUAL
+            WHERE NOT EXISTS (
+                SELECT 1 FROM spin_claims WHERE user_id=%s AND milestone=%s
+            )
+        """, (user_id, milestone, user_id, milestone))
 
-    flash(f"You earned {SPIN_REWARD_POINTS} reward points! Spin claimed successfully.", "success")
-    return redirect("/profile")
+        cursor.execute("""
+            INSERT INTO rewards (user_id, points)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE points = points + VALUES(points)
+        """, (user_id, SPIN_REWARD_POINTS))
+
+        db.commit()
+
+        flash(f"You earned {SPIN_REWARD_POINTS} reward points! Spin claimed successfully.", "success")
+        return redirect("/profile")
+
+    finally:
+        cursor.close()
+        db.close()
+
 
 @app.route('/verify_spin', methods=['GET', 'POST'])
 def verify_spin():
@@ -1315,143 +1383,155 @@ def verify_spin():
     user_id = session['user']['user_id']
     milestone = request.args.get('milestone') or request.form.get('milestone')
 
-    # -------------------------------------------------------
-    # ENSURE USER HAS REWARDS ROW
-    # -------------------------------------------------------
-    try:
-        cursor.execute("INSERT IGNORE INTO rewards (user_id, points) VALUES (%s, 0)", (user_id,))
-        db.commit()
-    except:
-        pass
-
-    # Load current points
-    try:
-        cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
-        r = cursor.fetchone()
-        current_points = int(r['points']) if r else 0
-    except:
-        current_points = 0
-
-    # -------------------------------------------------------
-    # LOAD OPERATOR SHEET
-    # -------------------------------------------------------
-    SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
-
-    operator_data = {}
-    sheet_loaded = False
-
-    try:
-        r = requests.get(SHEET_URL, timeout=6)
-        csv_rows = list(csv.reader(io.StringIO(r.text)))
-
-        for row in csv_rows[1:]:
-            if len(row) >= 3:
-                code = row[1].strip()
-                operator_data[code] = {
-                    "name": row[0].strip(),
-                    "location": row[2].strip()
-                }
-        sheet_loaded = True
-
-    except Exception as e:
-        flash("Could not load operator data.", "error")
-
-    # -------------------------------------------------------
-    # READ SESSION TEMP VALUES (for GET page)
-    # -------------------------------------------------------
-    valid_code = session.get('spin_valid_code', False)
-    operator_name = session.get('spin_operator_name', '')
-    operator_code = session.get('spin_operator_code', '')
-    operator_location = session.get('spin_operator_location', '')
-
-    # -------------------------------------------------------
-    # POST: VERIFY OPERATOR OR ADD POINTS
-    # -------------------------------------------------------
-    if request.method == 'POST':
-        form_code = (request.form.get('operator_code') or '').strip()
-        form_points = (request.form.get('reward_points') or '').strip()
-
-        # ---------------------------------------------------
-        # STEP 1 — VERIFY OPERATOR CODE ONLY
-        # ---------------------------------------------------
-        if form_code and not form_points:
-            if not sheet_loaded:
-                flash("Operator sheet not loaded. Try again.", "error")
-                return redirect(f"/verify_spin?milestone={milestone}")
-
-            match = operator_data.get(form_code)
-            if not match:
-                flash("Invalid operator code.", "error")
-                return redirect(f"/verify_spin?milestone={milestone}")
-
-            # SAVE SESSION (FOR NEXT PAGE)
-            session['spin_valid_code'] = True
-            session['spin_operator_code'] = form_code
-            session['spin_operator_name'] = match['name']
-            session['spin_operator_location'] = match['location']
-
-            # Force session write to avoid losing data on redirect
-            session['__force_update'] = str(time.time())
-
-            flash(f"Operator verified: {match['name']}", "success")
-            return redirect(f"/verify_spin?milestone={milestone}")
-
-        # ---------------------------------------------------
-        # STEP 2 — REWARD POINTS SUBMISSION
-        # ---------------------------------------------------
-        if form_points == "":
-            flash("Enter reward points.", "error")
-            return redirect(f"/verify_spin?milestone={milestone}")
-
-        try:
-            form_points = int(form_points)
-        except:
-            flash("Reward points must be a number.", "error")
-            return redirect(f"/verify_spin?milestone={milestone}")
-
-        if not operator_code:
-            flash("Verify operator first.", "error")
-            return redirect(f"/verify_spin?milestone={milestone}")
-
-        # UPDATE USER REWARD POINTS
-        new_total = current_points + form_points
-
-        try:
-            cursor.execute("UPDATE rewards SET points=%s WHERE user_id=%s", (new_total, user_id))
-        except Exception as e:
-            flash("Could not update rewards.", "error")
-            return redirect(f"/verify_spin?milestone={milestone}")
-
-        # INSERT CLAIM LOG
-        try:
-            cursor.execute("""
-                INSERT INTO spin_claims 
-                (user_id, milestone, reward_points, operator_name, operator_code, operator_location)
-                VALUES (%s, %s, %s, %s, %s, %s)
-            """, (user_id, milestone, form_points, operator_name, operator_code, operator_location))
-            db.commit()
-        except Exception as e:
-            flash("Could not save claim.", "error")
-            return redirect(f"/verify_spin?milestone={milestone}")
-
-        # CLEAR TEMP SESSION
-        for k in ['spin_valid_code', 'spin_operator_name', 'spin_operator_code', 'spin_operator_location']:
-            session.pop(k, None)
-
-        flash(f"Spin Verified! +{form_points} points added.", "success")
+    db = get_db_connection()
+    if not db:
+        flash("Database temporarily unavailable.", "error")
         return redirect('/profile')
 
-    # -----------------------------------------
-    # GET — Render page
-    # -----------------------------------------
-    return render_template(
-        "verify_spin.html",
-        milestone=milestone,
-        valid_code_entered=valid_code,
-        operator_name=operator_name,
-        operator_location=operator_location,
-        operator_code=operator_code
-    )
+    try:
+        cursor = db.cursor(dictionary=True)
+
+        # -------------------------------------------------------
+        # ENSURE USER HAS REWARDS ROW
+        # -------------------------------------------------------
+        try:
+            cursor.execute("INSERT IGNORE INTO rewards (user_id, points) VALUES (%s, 0)", (user_id,))
+            db.commit()
+        except:
+            pass
+
+        # Load current points
+        try:
+            cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
+            r = cursor.fetchone()
+            current_points = int(r['points']) if r else 0
+        except:
+            current_points = 0
+
+        # -------------------------------------------------------
+        # LOAD OPERATOR SHEET
+        # -------------------------------------------------------
+        SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
+
+        operator_data = {}
+        sheet_loaded = False
+
+        try:
+            r = requests.get(SHEET_URL, timeout=6)
+            csv_rows = list(csv.reader(io.StringIO(r.text)))
+
+            for row in csv_rows[1:]:
+                if len(row) >= 3:
+                    code = row[1].strip()
+                    operator_data[code] = {
+                        "name": row[0].strip(),
+                        "location": row[2].strip()
+                    }
+            sheet_loaded = True
+
+        except Exception:
+            flash("Could not load operator data.", "error")
+
+        # -------------------------------------------------------
+        # READ SESSION TEMP VALUES (for GET page)
+        # -------------------------------------------------------
+        valid_code = session.get('spin_valid_code', False)
+        operator_name = session.get('spin_operator_name', '')
+        operator_code = session.get('spin_operator_code', '')
+        operator_location = session.get('spin_operator_location', '')
+
+        # -------------------------------------------------------
+        # POST: VERIFY OPERATOR OR ADD POINTS
+        # -------------------------------------------------------
+        if request.method == 'POST':
+            form_code = (request.form.get('operator_code') or '').strip()
+            form_points = (request.form.get('reward_points') or '').strip()
+
+            # ---------------------------------------------------
+            # STEP 1 — VERIFY OPERATOR CODE ONLY
+            # ---------------------------------------------------
+            if form_code and not form_points:
+                if not sheet_loaded:
+                    flash("Operator sheet not loaded. Try again.", "error")
+                    return redirect(f"/verify_spin?milestone={milestone}")
+
+                match = operator_data.get(form_code)
+                if not match:
+                    flash("Invalid operator code.", "error")
+                    return redirect(f"/verify_spin?milestone={milestone}")
+
+                # SAVE SESSION (FOR NEXT PAGE)
+                session['spin_valid_code'] = True
+                session['spin_operator_code'] = form_code
+                session['spin_operator_name'] = match['name']
+                session['spin_operator_location'] = match['location']
+
+                # Force session write
+                session['__force_update'] = str(time.time())
+
+                flash(f"Operator verified: {match['name']}", "success")
+                return redirect(f"/verify_spin?milestone={milestone}")
+
+            # ---------------------------------------------------
+            # STEP 2 — REWARD POINTS SUBMISSION
+            # ---------------------------------------------------
+            if form_points == "":
+                flash("Enter reward points.", "error")
+                return redirect(f"/verify_spin?milestone={milestone}")
+
+            try:
+                form_points = int(form_points)
+            except:
+                flash("Reward points must be a number.", "error")
+                return redirect(f"/verify_spin?milestone={milestone}")
+
+            if not operator_code:
+                flash("Verify operator first.", "error")
+                return redirect(f"/verify_spin?milestone={milestone}")
+
+            # UPDATE USER REWARD POINTS
+            new_total = current_points + form_points
+
+            try:
+                cursor.execute("UPDATE rewards SET points=%s WHERE user_id=%s", (new_total, user_id))
+            except:
+                flash("Could not update rewards.", "error")
+                return redirect(f"/verify_spin?milestone={milestone}")
+
+            # INSERT CLAIM LOG
+            try:
+                cursor.execute("""
+                    INSERT INTO spin_claims 
+                    (user_id, milestone, reward_points, operator_name, operator_code, operator_location)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (user_id, milestone, form_points, operator_name, operator_code, operator_location))
+                db.commit()
+            except:
+                flash("Could not save claim.", "error")
+                return redirect(f"/verify_spin?milestone={milestone}")
+
+            # CLEAR TEMP SESSION
+            for k in ['spin_valid_code', 'spin_operator_name', 'spin_operator_code', 'spin_operator_location']:
+                session.pop(k, None)
+
+            flash(f"Spin Verified! +{form_points} points added.", "success")
+            return redirect('/profile')
+
+        # -----------------------------------------
+        # GET — Render page
+        # -----------------------------------------
+        return render_template(
+            "verify_spin.html",
+            milestone=milestone,
+            valid_code_entered=valid_code,
+            operator_name=operator_name,
+            operator_location=operator_location,
+            operator_code=operator_code
+        )
+
+    finally:
+        cursor.close()
+        db.close()
 
 @app.route("/process_spin_verification", methods=["POST"])
 def process_spin_verification():
@@ -1464,7 +1544,7 @@ def process_spin_verification():
     earned_points = int(request.form.get("earned_points", 0))
 
     # ------------------------------------------------------------------
-    # 1) Load operator codes from Google Sheet (same as payment_page)
+    # 1) Load operator codes from Google Sheet
     # ------------------------------------------------------------------
     import requests, csv, io
 
@@ -1474,7 +1554,6 @@ def process_spin_verification():
     try:
         res = requests.get(SHEET_URL, timeout=6)
         res.raise_for_status()
-
         csv_data = list(csv.reader(io.StringIO(res.text)))
 
         for row in csv_data[1:]:
@@ -1497,58 +1576,81 @@ def process_spin_verification():
     operator_name = operator_data[operator_code_form]["name"]
     operator_location = operator_data[operator_code_form]["location"]
 
-    cursor = mysql.connection.cursor()
+    # ------------------------------------------------------------------
+    # 3) DB CONNECT
+    # ------------------------------------------------------------------
+    db = get_db_connection()
+    if not db:
+        flash("Database temporarily unavailable.", "error")
+        return redirect("/profile")
 
-    # ------------------------------------------------------------------
-    # 3) Mark spin as claimed
-    # ------------------------------------------------------------------
-    cursor.execute("""
-        INSERT INTO spin_claims (user_id, milestone, claimed)
-        VALUES (%s, %s, TRUE)
-    """, (user_id, milestone))
+    try:
+        cursor = db.cursor(dictionary=True)
 
-    # ------------------------------------------------------------------
-    # 4) Add reward points to rewards table
-    # ------------------------------------------------------------------
-    cursor.execute("""
-        INSERT INTO rewards (user_id, points)
-        VALUES (%s, %s)
-        ON DUPLICATE KEY UPDATE points = points + VALUES(points)
-    """, (user_id, earned_points))
+        # ------------------------------------------------------------------
+        # 4) Mark spin as claimed
+        # ------------------------------------------------------------------
+        cursor.execute("""
+            INSERT INTO spin_claims (user_id, milestone, claimed)
+            VALUES (%s, %s, TRUE)
+        """, (user_id, milestone))
 
-    # ------------------------------------------------------------------
-    # 5) Log which operator verified the spin
-    # (optional but very useful for audit)
-    # ------------------------------------------------------------------
-    cursor.execute("""
-        INSERT INTO operator_spin_logs (user_id, milestone, operator_name, operator_code, operator_location, points_added)
-        VALUES (%s, %s, %s, %s, %s, %s)
-    """, (
-        user_id,
-        milestone,
-        operator_name,
-        operator_code_form,
-        operator_location,
-        earned_points
-    ))
+        # ------------------------------------------------------------------
+        # 5) Add reward points
+        # ------------------------------------------------------------------
+        cursor.execute("""
+            INSERT INTO rewards (user_id, points)
+            VALUES (%s, %s)
+            ON DUPLICATE KEY UPDATE points = points + VALUES(points)
+        """, (user_id, earned_points))
 
-    mysql.connection.commit()
+        # ------------------------------------------------------------------
+        # 6) Log operator verification
+        # ------------------------------------------------------------------
+        cursor.execute("""
+            INSERT INTO operator_spin_logs 
+            (user_id, milestone, operator_name, operator_code, operator_location, points_added)
+            VALUES (%s, %s, %s, %s, %s, %s)
+        """, (
+            user_id,
+            milestone,
+            operator_name,
+            operator_code_form,
+            operator_location,
+            earned_points
+        ))
 
-    flash(f"🎉 Spin verified by {operator_name}! {earned_points} points added.", "success")
-    return redirect("/profile")
+        db.commit()
+
+        flash(f"🎉 Spin verified by {operator_name}! {earned_points} points added.", "success")
+        return redirect("/profile")
+
+    finally:
+        cursor.close()
+        db.close()
+
 
 
 @app.route('/reviews', methods=['GET'])
 def reviews():
+    db = get_db_connection()
+    if not db:
+        flash("Database temporarily unavailable.", "error")
+        return redirect('/')
+
     try:
+        cursor = db.cursor(dictionary=True)
         cursor.execute("SELECT * FROM reviews ORDER BY created_at DESC")
         reviews = cursor.fetchall()
     except Exception as e:
         print("❌ Error fetching reviews:", e)
         reviews = []
+    finally:
+        cursor.close()
+        db.close()
 
-    # render index.html instead of reviews.html
     return render_template('index.html', reviews=reviews)
+
 
 
 @app.route('/submit_review', methods=['POST'])
@@ -1562,27 +1664,34 @@ def submit_review():
             flash("Please fill in all required fields.", "error")
             return redirect('/')
 
-        cursor.execute("""
-            INSERT INTO reviews (user_id, name, comment)
-            VALUES (%s, %s, %s)
-        """, (user_id, name, comment))
-        db.commit()
-        flash("Thank you for your review!", "success")
+        db = get_db_connection()
+        if not db:
+            flash("Database temporarily unavailable.", "error")
+            return redirect('/')
 
-    except Exception as e:
-        print("❌ Error submitting review:")
+        try:
+            cursor = db.cursor(dictionary=True)
+            cursor.execute("""
+                INSERT INTO reviews (user_id, name, comment)
+                VALUES (%s, %s, %s)
+            """, (user_id, name, comment))
+            db.commit()
+            flash("Thank you for your review!", "success")
+        finally:
+            cursor.close()
+            db.close()
+
+    except Exception:
+        import traceback
         traceback.print_exc()
-        db.rollback()
         flash("Could not submit review. Try again.", "error")
 
     return redirect('/')
 
-if __name__ == '__main__':
-    app.run()
-
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
