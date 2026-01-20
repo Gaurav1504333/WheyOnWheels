@@ -21,14 +21,6 @@ def get_db_connection():
     except mysql.connector.Error as e:
         print("DB Connection Error:", e)
         return None
-db = get_db_connection()
-if not db:
-    return "Database temporarily unavailable", 503
-
-cursor = db.cursor(dictionary=True)
-cursor.execute(...)
-
-
 
 # Google Sheet CSV export URL
 Smoothie_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSob3Z4VWarQN4fiwdWX3UjH35ZsGddD5oGQXvd0FVqkg-NQw9GkCzLeXyVQeakmLzeZvIfXYace_3C/pub?output=csv"
@@ -42,14 +34,23 @@ def inject_user():
 
 @app.route('/')
 def home():
+    db = get_db_connection()
+    if not db:
+        print("❌ Database temporarily unavailable")
+        return render_template('index.html', reviews=[])
+
     try:
+        cursor = db.cursor(dictionary=True)
         cursor.execute("SELECT * FROM reviews ORDER BY created_at DESC")
         reviews = cursor.fetchall()
+        cursor.close()
+        db.close()
     except Exception as e:
         print("❌ Error fetching reviews:", e)
         reviews = []
 
     return render_template('index.html', reviews=reviews)
+
 
 
 @app.route('/menu_select')
@@ -1582,6 +1583,7 @@ if __name__ == '__main__':
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
