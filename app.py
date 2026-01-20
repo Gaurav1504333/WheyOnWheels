@@ -3,18 +3,21 @@ import pandas as pd
 import mysql.connector
 from datetime import datetime
 import traceback
+import os
 
 app = Flask(__name__)
 app.secret_key = 'b1e2c3d4a5f67890123456789abcdef'
 
 # MySQL Configuration
 db = mysql.connector.connect(
-    host='localhost',
-    user='root',
-    password='Gaurav@123*',
-    database='WheyOnWheels'
+    host=os.getenv("DB_HOST"),
+    user=os.getenv("DB_USER"),
+    password=os.getenv("DB_PASSWORD"),
+    database=os.getenv("DB_NAME"),
+    port=int(os.getenv("DB_PORT"))
 )
 cursor = db.cursor(dictionary=True)
+
 
 # Google Sheet CSV export URL
 Smoothie_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSob3Z4VWarQN4fiwdWX3UjH35ZsGddD5oGQXvd0FVqkg-NQw9GkCzLeXyVQeakmLzeZvIfXYace_3C/pub?output=csv"
@@ -1563,7 +1566,8 @@ def submit_review():
     return redirect('/')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run()
+
 
 
 #E:\wow\python.exe e:\wow\app.py 
