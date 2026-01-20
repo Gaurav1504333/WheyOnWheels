@@ -21,6 +21,12 @@ def get_db_connection():
     except mysql.connector.Error as e:
         print("DB Connection Error:", e)
         return None
+db = get_db_connection()
+if not db:
+    return "Database temporarily unavailable", 503
+
+cursor = db.cursor(dictionary=True)
+cursor.execute(...)
 
 
 
@@ -1576,5 +1582,6 @@ if __name__ == '__main__':
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
