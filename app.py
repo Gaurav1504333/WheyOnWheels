@@ -8,15 +8,20 @@ import os
 app = Flask(__name__)
 app.secret_key = 'b1e2c3d4a5f67890123456789abcdef'
 
-# MySQL Configuration
-db = mysql.connector.connect(
-    host=os.getenv("DB_HOST"),
-    user=os.getenv("DB_USER"),
-    password=os.getenv("DB_PASSWORD"),
-    database=os.getenv("DB_NAME"),
-    port=int(os.getenv("DB_PORT", 3306))
-)
-cursor = db.cursor(dictionary=True)
+def get_db_connection():
+    try:
+        return mysql.connector.connect(
+            host=os.getenv("DB_HOST"),
+            user=os.getenv("DB_USER"),
+            password=os.getenv("DB_PASSWORD"),
+            database=os.getenv("DB_NAME"),
+            port=int(os.getenv("DB_PORT", 3306)),
+            autocommit=True
+        )
+    except mysql.connector.Error as e:
+        print("DB Connection Error:", e)
+        return None
+
 
 
 # Google Sheet CSV export URL
@@ -1571,4 +1576,5 @@ if __name__ == '__main__':
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
