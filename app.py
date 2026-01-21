@@ -11,16 +11,17 @@ app.secret_key = 'b1e2c3d4a5f67890123456789abcdef'
 def get_db_connection():
     try:
         return mysql.connector.connect(
-            host=os.getenv("DB_HOST"),
-            user=os.getenv("DB_USER"),
+            host="mysql.railway.internal",
+            user="root",
             password=os.getenv("DB_PASSWORD"),
-            database=os.getenv("DB_NAME"),
-            port=int(os.getenv("DB_PORT", 3306)),
+            database="railway",
+            port=3306,
             autocommit=True
         )
     except mysql.connector.Error as e:
         print("DB Connection Error:", e)
         return None
+
 
 @app.route("/db-test")
 def db_test():
@@ -1700,6 +1701,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
