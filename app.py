@@ -22,6 +22,13 @@ def get_db_connection():
         print("DB Connection Error:", e)
         return None
 
+@app.route("/db-test")
+def db_test():
+    conn = get_db_connection()
+    if conn:
+        return "Database connected successfully!"
+    else:
+        return "Database connection failed!"
 
 
 # Google Sheet CSV export URL
@@ -1693,6 +1700,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
