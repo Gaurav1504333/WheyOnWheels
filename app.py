@@ -1422,21 +1422,28 @@ def verify_spin():
         cursor = db.cursor(dictionary=True)
 
         # -------------------------------------------------------
+        # CHECK IF ALREADY CLAIMED
+        # -------------------------------------------------------
+        cursor.execute(
+            "SELECT 1 FROM spin_claims WHERE user_id=%s AND milestone=%s AND claimed=TRUE",
+            (user_id, milestone)
+        )
+        if cursor.fetchone():
+            flash("Spin already claimed.", "info")
+            return redirect('/profile')
+
+        # -------------------------------------------------------
         # ENSURE USER HAS REWARDS ROW
         # -------------------------------------------------------
-        try:
-            cursor.execute("INSERT IGNORE INTO rewards (user_id, points) VALUES (%s, 0)", (user_id,))
-            db.commit()
-        except:
-            pass
+        cursor.execute(
+            "INSERT IGNORE INTO rewards (user_id, points) VALUES (%s, 0)",
+            (user_id,)
+        )
+        db.commit()
 
-        # Load current points
-        try:
-            cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
-            r = cursor.fetchone()
-            current_points = int(r['points']) if r else 0
-        except:
-            current_points = 0
+        cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
+        r = cursor.fetchone()
+        current_points = int(r['points']) if r else 0
 
         # -------------------------------------------------------
         # LOAD OPERATOR SHEET
@@ -1444,26 +1451,21 @@ def verify_spin():
         SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
 
         operator_data = {}
-        sheet_loaded = False
-
         try:
             r = requests.get(SHEET_URL, timeout=6)
             csv_rows = list(csv.reader(io.StringIO(r.text)))
 
             for row in csv_rows[1:]:
                 if len(row) >= 3:
-                    code = row[1].strip()
-                    operator_data[code] = {
+                    operator_data[row[1].strip()] = {
                         "name": row[0].strip(),
                         "location": row[2].strip()
                     }
-            sheet_loaded = True
-
-        except Exception:
+        except:
             flash("Could not load operator data.", "error")
 
         # -------------------------------------------------------
-        # READ SESSION TEMP VALUES (for GET page)
+        # SESSION TEMP VALUES
         # -------------------------------------------------------
         valid_code = session.get('spin_valid_code', False)
         operator_name = session.get('spin_operator_name', '')
@@ -1471,40 +1473,29 @@ def verify_spin():
         operator_location = session.get('spin_operator_location', '')
 
         # -------------------------------------------------------
-        # POST: VERIFY OPERATOR OR ADD POINTS
+        # POST
         # -------------------------------------------------------
         if request.method == 'POST':
             form_code = (request.form.get('operator_code') or '').strip()
             form_points = (request.form.get('reward_points') or '').strip()
 
-            # ---------------------------------------------------
-            # STEP 1 — VERIFY OPERATOR CODE ONLY
-            # ---------------------------------------------------
+            # ---------------- VERIFY OPERATOR ----------------
             if form_code and not form_points:
-                if not sheet_loaded:
-                    flash("Operator sheet not loaded. Try again.", "error")
-                    return redirect(f"/verify_spin?milestone={milestone}")
-
                 match = operator_data.get(form_code)
                 if not match:
                     flash("Invalid operator code.", "error")
                     return redirect(f"/verify_spin?milestone={milestone}")
 
-                # SAVE SESSION (FOR NEXT PAGE)
                 session['spin_valid_code'] = True
                 session['spin_operator_code'] = form_code
                 session['spin_operator_name'] = match['name']
                 session['spin_operator_location'] = match['location']
-
-                # Force session write
                 session['__force_update'] = str(time.time())
 
                 flash(f"Operator verified: {match['name']}", "success")
                 return redirect(f"/verify_spin?milestone={milestone}")
 
-            # ---------------------------------------------------
-            # STEP 2 — REWARD POINTS SUBMISSION
-            # ---------------------------------------------------
+            # ---------------- SUBMIT POINTS ----------------
             if form_points == "":
                 flash("Enter reward points.", "error")
                 return redirect(f"/verify_spin?milestone={milestone}")
@@ -1519,37 +1510,51 @@ def verify_spin():
                 flash("Verify operator first.", "error")
                 return redirect(f"/verify_spin?milestone={milestone}")
 
-            # UPDATE USER REWARD POINTS
+            # ---------------- UPDATE USER REWARDS ----------------
             new_total = current_points + form_points
+            cursor.execute(
+                "UPDATE rewards SET points=%s WHERE user_id=%s",
+                (new_total, user_id)
+            )
 
-            try:
-                cursor.execute("UPDATE rewards SET points=%s WHERE user_id=%s", (new_total, user_id))
-            except:
-                flash("Could not update rewards.", "error")
-                return redirect(f"/verify_spin?milestone={milestone}")
+            # ---------------- MARK CLAIMED ----------------
+            cursor.execute("""
+                INSERT INTO spin_claims 
+                (user_id, milestone, claimed, reward_points, operator_name, operator_code, operator_location)
+                VALUES (%s,%s,TRUE,%s,%s,%s,%s)
+            """, (
+                user_id,
+                milestone,
+                form_points,
+                operator_name,
+                operator_code,
+                operator_location
+            ))
 
-            # INSERT CLAIM LOG
-            try:
-                cursor.execute("""
-                    INSERT INTO spin_claims 
-                    (user_id, milestone, reward_points, operator_name, operator_code, operator_location)
-                    VALUES (%s, %s, %s, %s, %s, %s)
-                """, (user_id, milestone, form_points, operator_name, operator_code, operator_location))
-                db.commit()
-            except:
-                flash("Could not save claim.", "error")
-                return redirect(f"/verify_spin?milestone={milestone}")
+            # ---------------- OPERATOR LOG ----------------
+            cursor.execute("""
+                INSERT INTO operator_spin_logs
+                (user_id, milestone, operator_name, operator_code, operator_location, points_added)
+                VALUES (%s,%s,%s,%s,%s,%s)
+            """, (
+                user_id,
+                milestone,
+                operator_name,
+                operator_code,
+                operator_location,
+                form_points
+            ))
 
-            # CLEAR TEMP SESSION
+            db.commit()
+
+            # ---------------- CLEAR SESSION ----------------
             for k in ['spin_valid_code', 'spin_operator_name', 'spin_operator_code', 'spin_operator_location']:
                 session.pop(k, None)
 
             flash(f"Spin Verified! +{form_points} points added.", "success")
             return redirect('/profile')
 
-        # -----------------------------------------
-        # GET — Render page
-        # -----------------------------------------
+        # ---------------- GET ----------------
         return render_template(
             "verify_spin.html",
             milestone=milestone,
@@ -1562,104 +1567,6 @@ def verify_spin():
     finally:
         cursor.close()
         db.close()
-
-@app.route("/process_spin_verification", methods=["POST"])
-def process_spin_verification():
-    if 'user' not in session:
-        return redirect('/login')
-
-    user_id = request.form.get("user_id")
-    milestone = int(request.form.get("milestone"))
-    operator_code_form = request.form.get("operator_code", "").strip()
-    earned_points = int(request.form.get("earned_points", 0))
-
-    # ------------------------------------------------------------------
-    # 1) Load operator codes from Google Sheet
-    # ------------------------------------------------------------------
-    import requests, csv, io
-
-    SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
-
-    operator_data = {}
-    try:
-        res = requests.get(SHEET_URL, timeout=6)
-        res.raise_for_status()
-        csv_data = list(csv.reader(io.StringIO(res.text)))
-
-        for row in csv_data[1:]:
-            if len(row) >= 3:
-                name, code, location = row[0].strip(), row[1].strip(), row[2].strip()
-                operator_data[code] = {"name": name, "location": location}
-
-    except Exception as e:
-        print("⚠️ Operator Sheet Load Error:", e)
-        flash("Error loading operator data!", "error")
-        return redirect("/profile")
-
-    # ------------------------------------------------------------------
-    # 2) Verify operator code
-    # ------------------------------------------------------------------
-    if operator_code_form not in operator_data:
-        flash("❌ Invalid Operator Code!", "error")
-        return redirect("/profile")
-
-    operator_name = operator_data[operator_code_form]["name"]
-    operator_location = operator_data[operator_code_form]["location"]
-
-    # ------------------------------------------------------------------
-    # 3) DB CONNECT
-    # ------------------------------------------------------------------
-    db = get_db_connection()
-    if not db:
-        flash("Database temporarily unavailable.", "error")
-        return redirect("/profile")
-
-    try:
-        cursor = db.cursor(dictionary=True)
-
-        # ------------------------------------------------------------------
-        # 4) Mark spin as claimed
-        # ------------------------------------------------------------------
-        cursor.execute("""
-            INSERT INTO spin_claims (user_id, milestone, claimed)
-            VALUES (%s, %s, TRUE)
-        """, (user_id, milestone))
-
-        # ------------------------------------------------------------------
-        # 5) Add reward points
-        # ------------------------------------------------------------------
-        cursor.execute("""
-            INSERT INTO rewards (user_id, points)
-            VALUES (%s, %s)
-            ON DUPLICATE KEY UPDATE points = points + VALUES(points)
-        """, (user_id, earned_points))
-
-        # ------------------------------------------------------------------
-        # 6) Log operator verification
-        # ------------------------------------------------------------------
-        cursor.execute("""
-            INSERT INTO operator_spin_logs 
-            (user_id, milestone, operator_name, operator_code, operator_location, points_added)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (
-            user_id,
-            milestone,
-            operator_name,
-            operator_code_form,
-            operator_location,
-            earned_points
-        ))
-
-        db.commit()
-
-        flash(f"🎉 Spin verified by {operator_name}! {earned_points} points added.", "success")
-        return redirect("/profile")
-
-    finally:
-        cursor.close()
-        db.close()
-
-
 
 @app.route('/reviews', methods=['GET'])
 def reviews():
@@ -1721,6 +1628,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
