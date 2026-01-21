@@ -829,7 +829,6 @@ def payment_page():
 
     user_id = session['user']['user_id']
 
-    # ---------------------- DB CONNECT --------------------------
     db = get_db_connection()
     if not db:
         flash("Database temporarily unavailable.", "error")
@@ -880,14 +879,9 @@ def payment_page():
             try: return int(float(v))
             except: return f
 
-        # ------------------ ALWAYS USE STORED VALUES -------------------
         total_bill = safe_float(pending_order.get("total_bill"))
         reward_used = safe_int(pending_order.get("reward_used"))
         reward_earned = safe_int(pending_order.get("reward_earned"))
-        discount_applied = pending_order.get("discount_applied", False)
-
-        if discount_applied:
-            total_bill = safe_float(pending_order.get("total_bill"))
 
         reward_used = min(reward_used, current_rewards)
         total_after_rewards = round(max(total_bill - reward_used, 0), 2)
@@ -923,49 +917,74 @@ def payment_page():
             else:
                 oc = on = ol = None
 
-            qty_raw = pending_order.get("quantity_list") or pending_order.get("quantity") or "1"
-            quantity_clean = ",".join(qty_raw) if isinstance(qty_raw, list) else str(qty_raw)
-
             # ----------------- UPDATE REWARDS ---------------------
-            new_points = max(current_rewards - reward_used, 0)
-            new_points += reward_earned
-
+            new_points = max(current_rewards - reward_used, 0) + reward_earned
             cursor.execute(
                 "UPDATE rewards SET points=%s WHERE user_id=%s",
                 (new_points, user_id)
             )
 
             # ----------------- INSERT ORDER ------------------------------
-            cursor.execute("""
-                INSERT INTO orders (
-                    user_id, name, contact,
-                    smoothie, toast, icecream, workout,
-                    quantity, addons, combo,
-                    order_time, total_bill,
-                    reward_points_used, reward_points_earned,
+            order_type = pending_order.get("type", "normal")
+
+            if order_type == "customized":
+                cursor.execute("""
+                    INSERT INTO customized_orders (
+                        user_id, base, ingredients, whey, toppings, addons,
+                        total_price, reward_points_used, reward_points_earned,
+                        payment_mode
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                """, (
+                    user_id,
+                    pending_order.get("base"),
+                    pending_order.get("ingredients"),
+                    pending_order.get("whey"),
+                    pending_order.get("toppings"),
+                    pending_order.get("addons"),
+                    total_after_rewards,
+                    reward_used,
+                    reward_earned,
                     payment_mode
-                )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
-                        NOW(),%s,%s,%s,%s)
-            """, (
-                user_id,
-                session['user']['username'],
-                session['user']['phone'],
-                pending_order.get("smoothie", ""),
-                pending_order.get("toast", ""),
-                pending_order.get("icecream", ""),
-                pending_order.get("workout", ""),
-                quantity_clean,
-                pending_order.get("addons", ""),
-                pending_order.get("combo", ""),
-                total_after_rewards,
-                reward_used,
-                reward_earned,
-                payment_mode
-            ))
+                ))
 
-            order_id = cursor.lastrowid
+                order_id = cursor.lastrowid
 
+            else:
+                qty_raw = pending_order.get("quantity_list") or pending_order.get("quantity") or "1"
+                quantity_clean = ",".join(qty_raw) if isinstance(qty_raw, list) else str(qty_raw)
+
+                cursor.execute("""
+                    INSERT INTO orders (
+                        user_id, name, contact,
+                        smoothie, toast, icecream, workout,
+                        quantity, addons, combo,
+                        order_time, total_bill,
+                        reward_points_used, reward_points_earned,
+                        payment_mode
+                    )
+                    VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,
+                            NOW(),%s,%s,%s,%s)
+                """, (
+                    user_id,
+                    session['user']['username'],
+                    session['user']['phone'],
+                    pending_order.get("smoothie", ""),
+                    pending_order.get("toast", ""),
+                    pending_order.get("icecream", ""),
+                    pending_order.get("workout", ""),
+                    quantity_clean,
+                    pending_order.get("addons", ""),
+                    pending_order.get("combo", ""),
+                    total_after_rewards,
+                    reward_used,
+                    reward_earned,
+                    payment_mode
+                ))
+
+                order_id = cursor.lastrowid
+
+            # ----------------- OPERATOR LOG ------------------------------
             if oc:
                 cursor.execute("""
                     INSERT INTO operator_orders (
@@ -979,7 +998,7 @@ def payment_page():
                     order_id, user_id,
                     total_after_rewards,
                     payment_mode,
-                    pending_order.get("type", "normal")
+                    order_type
                 ))
 
             db.commit()
@@ -1702,6 +1721,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
