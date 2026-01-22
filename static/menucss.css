@@ -794,6 +794,9 @@ footer a:hover {
   .review-form label {
     font-size: 10px;
   }
+  .reviews h2{
+    font-size: 15px;
+  }
 
   .review-form input,
   .review-form select,
@@ -834,6 +837,7 @@ footer a:hover {
     margin-top: 30px;
   }
 }
+
 
 
 
