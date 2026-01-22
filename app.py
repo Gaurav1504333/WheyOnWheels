@@ -269,24 +269,27 @@ def order_toast():
         # Toast names for dropdown
         toasts = df.iloc[0:15, 1].dropna().tolist()
 
+        # 🔥 SAFELY detect price column
+        price_col = df.columns[4]
+
         # Clean price column
-        df.iloc[:, 4] = (
-            df.iloc[:, 4]
+        df[price_col] = (
+            df[price_col]
             .astype(str)
             .str.replace("₹", "", regex=False)
             .str.strip()
         )
 
-        df.iloc[:, 4] = pd.to_numeric(df.iloc[:, 4], errors="coerce").fillna(0)
+        df[price_col] = pd.to_numeric(df[price_col], errors="coerce").fillna(0)
 
         prices_backend = {
             str(name).strip().lower(): float(price)
-            for name, price in zip(df.iloc[:, 1], df.iloc[:, 4])
+            for name, price in zip(df.iloc[:, 1], df[price_col])
         }
 
         prices_frontend = {
             str(name): float(price)
-            for name, price in zip(df.iloc[:, 1], df.iloc[:, 4])
+            for name, price in zip(df.iloc[:, 1], df[price_col])
         }
 
     except Exception as e:
@@ -391,6 +394,7 @@ def order_toast():
         prices=prices_frontend,
         user_rewards=user_rewards
     )
+)
 
 
 
@@ -1759,6 +1763,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
