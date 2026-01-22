@@ -8,6 +8,44 @@ html {
   width: 100%;
   overflow-x: hidden;
 }
+/* ============================
+   CUSTOM FONT LOADING
+============================ */
+
+@font-face {
+  font-family: 'Adieu';
+  src: url('/static/Adieu-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Gefika';
+  src: url('/static/Gefika.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/static/OpenSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/static/OpenSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/static/OpenSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
 
 @keyframes heartbeat {
   0% {
@@ -34,7 +72,7 @@ body {
   background-repeat: no-repeat, no-repeat, repeat;
   background-size: cover, cover, 400px 400px;
   background-attachment: fixed, fixed, scroll;
-  font-family: 'open-sans', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   word-wrap: break-word;
   overflow-x: hidden;
   margin: 0;
@@ -254,7 +292,7 @@ h2 {
 
 .content p {
   font-size: 22px;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   color: #ffffff;
   font-weight: 500;
   line-height: 1.6;
@@ -281,7 +319,7 @@ h2 {
 
 .about-startup p{
   font-size: 13px;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   color: #ffffff;
   font-weight: 500;
   line-height: 1.6;
@@ -345,7 +383,7 @@ h2 {
 }
 
 .features {
-  font-family: adieu, sans-serif;
+  font-family: Adieu, sans-serif;
   font-size: 11px;
   color: #ffffff;
   padding: 40px 20px;
@@ -532,7 +570,7 @@ h2 {
 
 /* Make "Reviewing as" text use Adieu font */
 .review-form p {
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   font-size: 13px;
   color: #fff;
 }
@@ -816,7 +854,7 @@ footer a:hover {
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
 }
 
 .review-form input,
@@ -827,7 +865,7 @@ footer a:hover {
   border-radius: 8px;
   background: #1c181f;
   color: #fff;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   font-size: 13px;
 }
 
@@ -843,7 +881,7 @@ footer a:hover {
   border-radius: 8px;
   background: #fe6995;
   color: #fff;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s ease;
@@ -869,7 +907,7 @@ footer a:hover {
   background: rgba(255, 255, 255, 0.05);
   padding: 16px 20px;
   border-radius: 12px;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   color: #fff;
   box-shadow: 0 4px 12px rgba(0,0,0,0.3);
 }
@@ -904,7 +942,7 @@ footer a:hover {
   display: inline-block;
   margin-top: 20px;
   padding: 8px 24px;
-  font-family: adieu, sans-serif;
+  font-family: Adieu, sans-serif;
   font-size: 1em;
   background-color: #fe6995;
   color: #fff;
@@ -1278,3 +1316,4 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
