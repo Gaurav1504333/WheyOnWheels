@@ -47,6 +47,36 @@
     .div{
       margin-bottom:100px !important;
     }
+     @media (max-width: 480px) {
+      .choose {
+        font-size: 12px !important;
+      }
+      small {
+        font-size: 8px !important;
+        display: block;
+        margin-top: -4px !important;
+      }
+
+      .redeem-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .redeem-checkbox {
+        transform: scale(0.7);
+        margin: 0 !important;
+      }
+
+      .redeem-text {
+        font-size: 10px;
+        line-height: 1;
+      }
+      .div{
+        margin-bottom:100px;
+      }
+
+  }
   </style>
 </head>
 <body>
@@ -130,7 +160,7 @@
     <div class="add-button" onclick="addWorkout(); calculateTotal();">➕ Add Another Workout Drink</div>
 
     <div class="combo-group">
-      <label>Choose a Combo, Quantity & Addon:</label>
+      <label class="choose">Choose a Combo, Quantity & Addon:</label>
 
       <select name="combo" id="combo">
         <option value="">None</option>
@@ -149,14 +179,15 @@
       </select>
     </div>
 
-    <label>
-      <input type="checkbox" name="useRewards" id="redeem_toggle">
-      Redeem all reward points
+    <label class="redeem-label">
+      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
+      <span class="redeem-text">Redeem all reward points</span>
     </label>
+    
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
-    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1em;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
@@ -164,7 +195,7 @@
       🎉 10% discount applied (2 or more items)
     </div>
 
-    <button type="submit">Place Order</button>
+    <button type="submit" style="color:#000000;">Place Order</button>
   </form>
 </div>
 <div class="div"></div>
@@ -449,5 +480,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
