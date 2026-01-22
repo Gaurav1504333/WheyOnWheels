@@ -1192,7 +1192,8 @@ footer a:hover {
     font-size: 16px;
   }
   h2 {
-    font-size: 12px;
+    font-size: 16px;
+    margin-bottom: 4px;
   }
 
   .features,
@@ -1326,6 +1327,7 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
 
 
 
