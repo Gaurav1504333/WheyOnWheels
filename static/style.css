@@ -1180,10 +1180,10 @@ footer a:hover {
 /* Phones */
 @media (max-width: 480px) {
    body {
-    background-size: 100% auto;   /* Fix width, natural height */
-    background-repeat: repeat-y;  /* Repeat vertically */
+    background-size: 100% auto;
+    background-repeat: repeat;
     background-position: top center;
-    background-attachment: scroll; /* Important for mobile */
+    background-attachment: scroll;
   }
   .content {
     padding-top: 100px;
@@ -1327,6 +1327,7 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
 
 
 
