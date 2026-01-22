@@ -1245,32 +1245,35 @@ footer a:hover {
   .reviews {
   margin: 64px auto;
   padding: 20px 12px;
-}
+  }
 
-.review-form {
-  padding: 12px;
-  gap: 12px;
-}
+  .review-form {
+    padding: 12px;
+    gap: 12px;
+  }
 
-.review-form label {
-  font-size: 10px;
-}
+  .review-form label {
+    font-size: 10px;
+  }
 
-.review-form input,
-.review-form select,
-.review-form textarea {
-  font-size: 10px;
-  padding: 8px;
-}
+  .review-form input,
+  .review-form select,
+  .review-form textarea {
+    font-size: 10px;
+    padding: 8px;
+  }
 
-.review-form button {
-  font-size: 10px;
-  padding: 6px 12px;
-}
+  .review-form button {
+    font-size: 10px;
+    padding: 6px 12px;
+  }
 
-.review p {
-  font-size: 10px;
-}
+  .review p {
+    font-size: 10px;
+  }
+  .login_form{
+    padding: 0px 20px 50px 20px;
+  }
 }
 /* Extra small screens */
 @media (max-width: 460px) {
@@ -1330,6 +1333,7 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
 
 
 
