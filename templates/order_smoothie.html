@@ -98,28 +98,41 @@
     .div{
       margin-bottom:100px !important;
     }
-    @media (max-width: 480px){
-      .choose{
-        font-size: 12px !important;
-      }
-      input{
-        font-size: 9px !important;
-      }
-      small{
-        font-size: 8px !important;
-        margin-top:-10px !important;
-      }
-     .redeem-checkbox {
-        transform: scale(0.6);
-        cursor: pointer;
-        margin-top: 2px;
-      }
-      .redeem-text{
-        font-size: 10px;
-      .add-addon-btn{
-        margin-top: -10px !important;
-      }
-    }
+   @media (max-width: 480px){
+  .choose{
+    font-size: 12px !important;
+  }
+
+  input{
+    font-size: 9px !important;
+  }
+
+  small{
+    font-size: 8px !important;
+    margin-top: -10px !important;
+  }
+
+  .redeem-checkbox {
+    transform: scale(0.6);
+    cursor: pointer;
+    margin-top: -2px; /* move up */
+  }
+
+  .redeem-text{
+    font-size: 10px;
+    margin-top: -2px; /* move text up */
+    display: inline-block;
+  }
+
+  .redeem-label {
+    align-items: flex-start;
+  }
+
+  .add-addon-btn{
+    margin-top: -10px !important;
+  }
+}
+
 
     
   </style>
@@ -525,6 +538,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
