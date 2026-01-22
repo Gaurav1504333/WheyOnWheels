@@ -97,10 +97,10 @@
     }
     @media (max-width: 480px){
       label{
-        font-size: 20px !important;
+        font-size: 15px !important;
       }
       input{
-        font-size: 13px !important;
+        font-size: 10px !important;
       }
       small{
         font-size: 8px !important;
@@ -174,7 +174,7 @@
     
     <div id="smoothieContainer">
       <div class="smoothie-group">
-        <label>Choose a Smoothie and Quantity:</label>
+        <label class="choose">Choose a Smoothie and Quantity:</label>
         <select name="smoothie[]" class="smoothie">
   <option value="">None</option>
   {% for item in smoothies %}
@@ -208,13 +208,13 @@
     <div class="add-button" onclick="addSmoothie(); calculateTotal();">➕ Add Another Smoothie</div>
 
     <label>
-      <input type="checkbox" name="useRewards" id="redeem_toggle">
+      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem">
       Redeem all reward points
     </label>
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
-    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
     <div id="discountNote" style="display:none; color: green; margin-top: -10px;">
@@ -513,6 +513,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
