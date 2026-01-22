@@ -98,6 +98,9 @@
         font-size: 10px;
         line-height: 1;
       }
+      .div{
+        margin-bottom:100px;
+      }
     }
   </style>
 </head>
@@ -186,15 +189,16 @@
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
-    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
     <div id="discountNote">🎉 10% discount applied (2 or more toasts)</div>
 
-    <button type="submit">Place Order</button>
+    <button type="submit" style="color:#000000;">Place Order</button>
   </form>
 </div>
+<div class="div"></div>  
 <!-- Confetti JS -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -376,3 +380,4 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
