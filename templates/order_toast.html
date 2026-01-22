@@ -43,7 +43,7 @@
     .div{
       margin-bottom:100px !important;
     }
-    @media (max-width: 480px){
+   @media (max-width: 480px){
   .choose{
     font-size: 12px !important;
   }
@@ -54,10 +54,17 @@
 
   small{
     font-size: 8px !important;
+    margin-top: -4px !important;
     display: block;
   }
 
   /* Redeem row alignment fix */
+  .redeem-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
   .redeem-checkbox {
     transform: scale(0.7);
     cursor: pointer;
@@ -159,7 +166,7 @@
     <small>You have {{ user_rewards }} reward points</small>
 
     <!-- total -->
-    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
@@ -438,6 +445,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
