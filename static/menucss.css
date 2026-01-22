@@ -8,6 +8,45 @@ html {
   width: 100%;
   overflow-x: hidden;
 }
+/* ============================
+   CUSTOM FONT LOADING
+============================ */
+
+@font-face {
+  font-family: 'Adieu';
+  src: url('/static/Adieu-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Gefika';
+  src: url('/static/Gefika.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/static/OpenSans-Regular.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/static/OpenSans-Medium.ttf') format('truetype');
+  font-weight: 500;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  src: url('/static/OpenSans-Bold.ttf') format('truetype');
+  font-weight: 700;
+  font-style: normal;
+}
+
 /* Body background */
 body {
   background-color: #151219;
@@ -18,7 +57,7 @@ body {
   background-repeat: no-repeat, no-repeat, repeat;
   background-size: cover, cover, 400px 400px;
   background-attachment: fixed, fixed, scroll;
-  font-family: 'open-sans', sans-serif;
+  font-family: 'Open Sans', sans-serif;
   margin: 0;
   padding: 0;
 }
@@ -185,7 +224,7 @@ h2 {
 
 .about-startup p{
     font-size: 13px;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   color: #ffffff;
   font-weight: 500;
   line-height: 1.6;
@@ -205,7 +244,7 @@ h2 {
 }
 
 .features {
-  font-family: adieu, sans-serif;
+  font-family: Adieu, sans-serif;
   font-size: 11px !important;
   color: #ffffff;
   padding: 40px 20px;
@@ -254,7 +293,7 @@ h2 {
   width: 100%;
   max-width: 600px;
   margin: 0 auto;
-  font-family: adieu, sans-serif;
+  font-family: Adieu, sans-serif;
   font-style: italic;
   font-size: 12px;
   text-align: center;
@@ -267,7 +306,7 @@ h2 {
 }
 .explore-btn {
   padding: 8px 24px;
-  font-family: adieu, sans-serif;
+  font-family: Adieu, sans-serif;
   font-size: 1em;
   background-color: #fe6995;
   color: #fff;
@@ -296,7 +335,7 @@ h2 {
   font-size: 13px;
   font-weight: 600;
   color: #fff;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
 }
 
 .review-form input,
@@ -307,7 +346,7 @@ h2 {
   border-radius: 8px;
   background: #1c181f;
   color: #fff;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   font-size: 13px;
 }
 
@@ -323,7 +362,7 @@ h2 {
   border-radius: 8px;
   background: #fe6995;
   color: #fff;
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   font-weight: 600;
   cursor: pointer;
   transition: background 0.3s ease;
@@ -494,7 +533,7 @@ h2 {
 }
 }
 .review-form p {
-  font-family: 'adieu', sans-serif;
+  font-family: 'Adieu', sans-serif;
   font-size: 13px;
   color: #fff;
 }
@@ -750,3 +789,4 @@ footer a:hover {
     margin-top: 30px;
   }
 }
+
