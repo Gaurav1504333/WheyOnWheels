@@ -1196,7 +1196,7 @@ footer a:hover {
   .about-startup p,
   .content p,
   .testimonial-list blockquote {
-    font-size: 12px;
+    font-size: 10px;
   }
   .feature{
     margin-top: -36px;
@@ -1220,13 +1220,13 @@ footer a:hover {
   }
 
   .hero-logo::before {
-    width: 140px;
-    height: 140px;
+    width: 180px;
+    height: 180px;
   }
 
   footer {
     margin-top: -12px !important;
-    font-size: 8px !important;
+    font-size: 10px !important;
   }
   .reviews {
   margin: 64px auto;
@@ -1316,5 +1316,6 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
 
 
