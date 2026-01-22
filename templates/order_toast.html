@@ -43,6 +43,34 @@
     .div{
       margin-bottom:100px !important;
     }
+    @media (max-width: 480px){
+  .choose{
+    font-size: 12px !important;
+  }
+
+  input{
+    font-size: 9px !important;
+  }
+
+  small{
+    font-size: 8px !important;
+    display: block;
+  }
+
+  /* Redeem row alignment fix */
+  .redeem-checkbox {
+    transform: scale(0.7);
+    cursor: pointer;
+    margin: 0 !important;
+  }
+
+  .redeem-text{
+    font-size: 10px;
+    line-height: 1;
+    margin: 0 !important;
+    display: inline-block;
+  }
+}
   </style>
 </head>
 <body>
@@ -106,7 +134,7 @@
     
     <div id="toastContainer">
   <div class="toast-group">
-    <label>Choose a Toast and Quantity:</label>
+    <label class="choose">Choose a Toast and Quantity:</label>
     <select name="toast[]" class="toast">
       <option value="">None</option>
       {% for item in toasts %}
@@ -122,9 +150,9 @@
 <div class="add-button" onclick="addToast(); calculateTotal();">➕ Add Another Order</div>
 
 
-    <label>
-      <input type="checkbox" name="useRewards" id="redeem_toggle">
-      Redeem all reward points
+    <label class="redeem-label">
+      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
+      <span class="redeem-text">Redeem all reward points</span>
     </label>
 
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
@@ -464,5 +492,6 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
