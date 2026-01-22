@@ -28,56 +28,16 @@
       font-weight: bold;
     }
     .remove-btn {
-      background: #ffffff;
-      color: white;
-      border: none;
-      margin-top:4px;
-      padding: 6px 10px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-size: 14px;
-    }
-    label,input,small{
-      font-family: 'Adieu', sans-serif;
-    }
-    .div{
-      margin-bottom:100px !important;
-    }
-   @media (max-width: 480px){
-  .choose{
-    font-size: 12px !important;
-  }
-
-  input{
-    font-size: 9px !important;
-  }
-
-  small{
-    font-size: 8px !important;
-    margin-top: -4px !important;
-    display: block;
-  }
-
-  /* Redeem row alignment fix */
-  .redeem-label {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-  }
-
-  .redeem-checkbox {
-    transform: scale(0.7);
-    cursor: pointer;
-    margin: 0 !important;
-  }
-
-  .redeem-text{
-    font-size: 10px;
-    line-height: 1;
-    margin: 0 !important;
-    display: inline-block;
-  }
+  background: #ffffff;
+  color: white;
+  border: none;
+  margin-top:4px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
 }
+
   </style>
 </head>
 <body>
@@ -141,7 +101,7 @@
     
     <div id="toastContainer">
   <div class="toast-group">
-    <label class="choose">Choose a Toast and Quantity:</label>
+    <label>Choose a Toast and Quantity:</label>
     <select name="toast[]" class="toast">
       <option value="">None</option>
       {% for item in toasts %}
@@ -157,16 +117,16 @@
 <div class="add-button" onclick="addToast(); calculateTotal();">➕ Add Another Order</div>
 
 
-    <label class="redeem-label">
-      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
-      <span class="redeem-text">Redeem all reward points</span>
+    <label>
+      <input type="checkbox" name="useRewards" id="redeem_toggle">
+      Redeem all reward points
     </label>
 
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
     <!-- total -->
-    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em; font-family: 'Adieu', sans-serif;">
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
@@ -176,7 +136,6 @@
     <button type="submit">Place Order</button>
   </form>
 </div>
-<div class="div"></div>
 <!-- Confetti JS -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
@@ -445,8 +404,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
-
-
-
-
-
