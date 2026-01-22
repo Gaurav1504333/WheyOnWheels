@@ -42,6 +42,36 @@
     .div{
       margin-bottom:100px !important;
     }
+        @media (max-width: 480px) {
+      .choose {
+        font-size: 12px !important;
+      }
+      small {
+        font-size: 8px !important;
+        display: block;
+        margin-top: -4px !important;
+      }
+
+      .redeem-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .redeem-checkbox {
+        transform: scale(0.7);
+        margin: 0 !important;
+      }
+
+      .redeem-text {
+        font-size: 10px;
+        line-height: 1;
+      }
+      .div{
+        margin-bottom:100px;
+      }
+
+  }
   </style>
 </head>
 
@@ -110,7 +140,7 @@
 
     <div id="iceContainer">
       <div class="ice-group">
-  <label>Select Icecream & Quantity:</label>
+  <label class="choose">Select Icecream & Quantity:</label>
   <select name="icecream[]" class="icecream">
     <option value="">None</option>
     {% for i in icecreams %}
@@ -125,10 +155,11 @@
 
     <div class="add-button" onclick="addIcecream(); calculateTotal();">➕ Add Another Scoop</div>
 
-    <label>
-      <input type="checkbox" id="redeem_toggle">
-      Redeem Reward Points
+    <label class="redeem-label">
+      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
+      <span class="redeem-text">Redeem all reward points</span>
     </label>
+    
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
@@ -407,10 +438,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
-
-
-
-
-
-
-
