@@ -369,6 +369,9 @@ h2 {
 .btn:hover {
   background-color: #d63b3b;
 }
+.customize-btn{
+  color:#000000;
+}
 .features {
   opacity: 0;
   transform: translateX(100px); /* Opposite direction */
@@ -1336,6 +1339,7 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
 
 
 
