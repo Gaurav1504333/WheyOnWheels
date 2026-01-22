@@ -101,6 +101,9 @@
       .div{
         margin-bottom:100px;
       }
+      .toast{
+        font-size: 9px;
+      }
     }
   </style>
 </head>
@@ -189,7 +192,7 @@
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
-    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em; font-family: 'Adieu', sans-serif;">
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
@@ -380,4 +383,5 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
