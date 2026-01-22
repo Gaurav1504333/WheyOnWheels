@@ -105,7 +105,7 @@
       small{
         font-size: 8px !important;
       }
-      label #redeem{
+      label #redeem_toggle{
         font-size: 10px !important;
       }
     }
@@ -208,7 +208,7 @@
     <div class="add-button" onclick="addSmoothie(); calculateTotal();">➕ Add Another Smoothie</div>
 
     <label>
-      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem">
+      <input type="checkbox" name="useRewards" id="redeem_toggle">
       Redeem all reward points
     </label>
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
@@ -513,6 +513,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
