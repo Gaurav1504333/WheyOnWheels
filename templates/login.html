@@ -2,23 +2,13 @@
 <html>
 <head>
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <title>Login - WheyOnWheels</title>
     <style>
       *, *::before, *::after { box-sizing: border-box; }
         html { width: 100%; overflow-x: hidden; }
-
-      body {
-            background-image: linear-gradient(rgba(21, 18, 25, 0.6), rgba(21, 18, 25, 0.6)), url("/static/bg.jpg");
-            background-repeat: no-repeat, no-repeat, repeat;
-            background-size: cover, cover, 400px 400px;
-            background-attachment: fixed, fixed, scroll;
-            background-color: #151219;
-            color: #ffffff;
-            font-family: 'Adieu', sans-serif;
-            margin: 0;
-            padding: 8px;
-        }
 
     h2 {
       text-align: center;
@@ -165,7 +155,6 @@
     <button type="submit">Login</button>
     <p>Don’t have an account? <a href="/signup">Sign up here</a></p>
   </form>
-</body>
   <footer class="site-footer">
   <div class="footer-container">
 
@@ -191,7 +180,24 @@
 
   <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
 </footer>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const hamburger = document.getElementById("hamburger");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener("click", function () {
+    const open = mobileMenu.classList.toggle("open");
+    hamburger.setAttribute("aria-expanded", open);
+    mobileMenu.setAttribute("aria-hidden", !open);
+  });
+});
+</script>
+
+</body>
 </html>
+
 
 
 
