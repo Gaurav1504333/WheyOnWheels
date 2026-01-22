@@ -986,11 +986,11 @@ footer a:hover {
 
   .footer-section h3,
   .footer-section h4 {
-    font-size: 1.1rem;   /* Slightly smaller Adieu titles */
+    font-size: 13px;   /* Slightly smaller Adieu titles */
   }
 
   .footer-section p {
-    font-size: 13px;     /* Comfortable mobile size */
+    font-size: 12px;     /* Comfortable mobile size */
   }
 
   .footer-bottom {
@@ -998,4 +998,5 @@ footer a:hover {
     margin-top: 30px;
   }
 }
+
 
