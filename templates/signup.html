@@ -250,8 +250,32 @@
 
   <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
 </footer>
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const hamburger = document.getElementById("hamburger");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  if (!hamburger || !mobileMenu) return;
+
+  hamburger.addEventListener("click", function () {
+    const open = mobileMenu.classList.toggle("open");
+    hamburger.setAttribute("aria-expanded", open);
+    mobileMenu.setAttribute("aria-hidden", !open);
+  });
+
+  // Close menu when a link is clicked
+  mobileMenu.querySelectorAll("a").forEach(link => {
+    link.addEventListener("click", () => {
+      mobileMenu.classList.remove("open");
+      hamburger.setAttribute("aria-expanded", "false");
+      mobileMenu.setAttribute("aria-hidden", "true");
+    });
+  });
+});
+</script>
 
 </body>
 </html>
+
 
 
