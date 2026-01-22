@@ -150,11 +150,13 @@
 </nav>
 
   <h2>Login to WheyOnWheels</h2>
-  <form method="POST" action="/login" class="login_form">
+  <div class="login_form">
+    <form method="POST" action="/login">
     <input type="tel" name="phone" placeholder="Enter your phone number" required>
     <button type="submit">Login</button>
     <p>Don’t have an account? <a href="/signup">Sign up here</a></p>
   </form>
+  </div>
   <footer class="site-footer">
   <div class="footer-container">
 
@@ -197,6 +199,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
