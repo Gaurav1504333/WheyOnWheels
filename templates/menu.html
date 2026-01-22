@@ -89,61 +89,6 @@
     <p>Unable to load menu at the moment. Please try again later.</p>
     {% endif %}
   </div>
-  <section class="about-startup">
-    <h2>About Us</h2>
-    <p>
-      WheyOnWheels is India’s first mobile protein smoothie truck, dedicated to delivering high-quality nutrition right after your workout.
-      We partner with rising whey brands like Avvatar to bring affordable, delicious, and performance-focused smoothies to fitness enthusiasts.
-      Our trucks operate in major fitness zones and premium areas like Bandra, Andheri, BKC, and Malad. With gamified discounts, loyalty perks, and optional creatine add-ons,
-      we’re not just fueling gains — we’re building a movement.
-    </p>
-  </section>
-  <!-- Features Highlight Section -->
-<section class="features">
-  <h2>Why WheyOnWheels?</h2>
-  <div class="features-grid">
-    <div class="feature">
-  <h3>Mobile Convenience</h3>
-  <p>
-    Say goodbye to detours and delays — our smoothie truck parks right outside your gym. Whether it’s post-leg day or a quick protein top-up, we’re steps away with cold, ready-to-blend goodness. Just grab, sip, and go.
-  </p>
-</div>
-
-<div class="feature">
-  <h3>Science-Backed Nutrition</h3>
-  <p>
-    Every smoothie is crafted with premium-grade whey protein, balanced macros, and the option to add creatine & EAAs. Designed in collaboration with certified nutritionists to support real recovery and real gains.
-  </p>
-</div>
-
-<div class="feature">
-  <h3>Fitness Meets Fun</h3>
-  <p>
-    We gamify your grind. Take on mini fitness challenges to unlock discounts, earn loyalty rewards with every sip. Who says serious fitness can’t be seriously fun?
-  </p>
-</div>
-
-  </div>
-</section>
-
-<!-- Testimonials Section -->
-<section class="reviews">
-  <h2>Leave a Review</h2>
-  <form action="/submit_review" method="POST" class="review-form">
-    {% if session.get('user') %}
-      <input type="hidden" name="name" value="{{ session['user']['username'] }}">
-      <p>Reviewing as <strong>{{ session['user']['username'] }}</strong></p>
-    {% else %}
-      <label for="name">Your Name:</label>
-      <input type="text" id="name" name="name" required>
-    {% endif %}
-
-    <label for="comment">Your Review:</label>
-    <textarea id="comment" name="comment" rows="4" required></textarea>
-
-    <button type="submit">Submit Review</button>
-  </form>
-</section>
 
   <script>
   document.addEventListener("DOMContentLoaded", function () {
@@ -294,3 +239,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </body>
 
 </html>
+
