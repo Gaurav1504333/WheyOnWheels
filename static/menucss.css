@@ -772,6 +772,9 @@ footer a:hover {
     margin-top: -12px !important;
     font-size: 12px !important;
   }
+  footer h3,h4{
+    font-size: 13px;
+  }
   footer a{
     font-size: 12px !important;
   }
@@ -779,8 +782,8 @@ footer a:hover {
     font-size: 12px !important;
   }
   .reviews {
-  margin: 64px auto;
-  padding: 20px 12px;
+  margin: 64px;
+  padding: 20px 35px;
   }
 
   .review-form {
@@ -831,6 +834,7 @@ footer a:hover {
     margin-top: 30px;
   }
 }
+
 
 
 
