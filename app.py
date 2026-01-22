@@ -394,7 +394,6 @@ def order_toast():
         prices=prices_frontend,
         user_rewards=user_rewards
     )
-)
 
 
 
@@ -1763,6 +1762,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
