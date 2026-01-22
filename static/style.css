@@ -179,7 +179,6 @@ body {
 /* Must Try Section */
 .must-try-section {
   padding: 70px 0 50px;   /* increased top gap for spacing below hero */
-  background: #151219;    /* matches your website theme */
 }
 
 .must-try-title {
@@ -1327,6 +1326,7 @@ footer a:hover {
     font-size: 12px;
   }
 }
+
 
 
 
