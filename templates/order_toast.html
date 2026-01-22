@@ -6,8 +6,10 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <style>
     body { overflow-x: hidden; }
+
     .toast-group {
       display: flex;
       flex-wrap: wrap;
@@ -15,11 +17,18 @@
       align-items: flex-start;
       margin-bottom: 15px;
     }
-    .toast-group label { flex: 1 1 100%; margin-bottom: 5px; }
-    .toast-group select,
-    .toast-group input[type="number"] { flex: 1; min-width: 0; }
 
-    /* Discount note */
+    .toast-group label {
+      flex: 1 1 100%;
+      margin-bottom: 5px;
+    }
+
+    .toast-group select,
+    .toast-group input[type="number"] {
+      flex: 1;
+      min-width: 0;
+    }
+
     #discountNote {
       display: none;
       color: green;
@@ -27,33 +36,84 @@
       margin-bottom: 10px;
       font-weight: bold;
     }
-    .remove-btn {
-  background: #ffffff;
-  color: white;
-  border: none;
-  margin-top:4px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 14px;
-}
 
+    .remove-btn {
+      background: #ffffff;
+      color: black;
+      border: none;
+      margin-top: 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    label, input, small {
+      font-family: 'Adieu', sans-serif;
+    }
+
+    .redeem-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .redeem-checkbox {
+      transform: scale(1);
+      cursor: pointer;
+    }
+
+    .redeem-text {
+      font-size: 14px;
+    }
+
+    @media (max-width: 480px) {
+      .choose {
+        font-size: 12px !important;
+      }
+
+      input {
+        font-size: 9px !important;
+      }
+
+      small {
+        font-size: 8px !important;
+        display: block;
+        margin-top: -4px !important;
+      }
+
+      .redeem-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .redeem-checkbox {
+        transform: scale(0.7);
+        margin: 0 !important;
+      }
+
+      .redeem-text {
+        font-size: 10px;
+        line-height: 1;
+      }
+    }
   </style>
 </head>
+
 <body>
 
 <nav class="navbar">
-  <!-- Mobile top bar -->
-<div class="mobile-header">
-  <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
-  <span class="mobile-title">WHEY-ON-WHEELS</span>
+  <div class="mobile-header">
+    <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <span class="mobile-title">WHEY-ON-WHEELS</span>
 
-  {% if session.get('user') %}
-    <a href="/profile" class="mobile-profile">👤</a>
-  {% endif %}
-</div>
+    {% if session.get('user') %}
+      <a href="/profile" class="mobile-profile">👤</a>
+    {% endif %}
+  </div>
 
-  <!-- Desktop container -->
   <div class="navbar-container desktop-nav">
     <div class="nav-left">
       <ul>
@@ -77,7 +137,6 @@
     </div>
   </div>
 
-  <!-- Mobile dropdown -->
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
     <ul>
       <li><a href="/">Home</a></li>
@@ -97,364 +156,239 @@
 
 <div class="form-container">
   <h2>Place Your Order</h2>
+
   <form method="POST" action="/order_toast" id="orderForm">
-    
+
     <div id="toastContainer">
-  <div class="toast-group">
-    <label>Choose a Toast and Quantity:</label>
-    <select name="toast[]" class="toast">
-      <option value="">None</option>
-      {% for item in toasts %}
-        <option value="{{ item }}">{{ item }}</option>
-      {% endfor %}
-    </select>
-    <input type="number" name="quantity[]" min="1" value="1">
-    <!-- ❌ No minus button for first toast -->
-  </div>
-</div>
+      <div class="toast-group">
+        <label class="choose">Choose a Toast and Quantity:</label>
 
-<!-- Add Toast Button -->
-<div class="add-button" onclick="addToast(); calculateTotal();">➕ Add Another Order</div>
+        <select name="toast[]" class="toast">
+          <option value="">None</option>
+          {% for item in toasts %}
+            <option value="{{ item }}">{{ item }}</option>
+          {% endfor %}
+        </select>
 
+        <input type="number" name="quantity[]" min="1" value="1">
+      </div>
+    </div>
 
-    <label>
-      <input type="checkbox" name="useRewards" id="redeem_toggle">
-      Redeem all reward points
+    <div class="add-button" onclick="addToast(); calculateTotal();">
+      ➕ Add Another Order
+    </div>
+
+    <label class="redeem-label">
+      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
+      <span class="redeem-text">Redeem all reward points</span>
     </label>
 
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
-    <!-- total -->
     <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
-    <!-- discount note -->
     <div id="discountNote">🎉 10% discount applied (2 or more toasts)</div>
 
     <button type="submit">Place Order</button>
   </form>
 </div>
-<!-- Confetti JS -->
-<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Place Order</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
+  <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<section class="about-startup">
-  <h2>About Us</h2>
-    <p>
-      WheyOnWheels is India’s first mobile protein smoothie truck, dedicated to delivering high-quality nutrition right after your workout.
-      We partner with rising whey brands like Avvatar to bring affordable, delicious, and performance-focused smoothies to fitness enthusiasts.
-      Our trucks operate in major fitness zones and premium areas like Bandra, Andheri, BKC, and Malad. With gamified discounts, loyalty perks, and optional creatine & EAAs add-ons,
-      we’re not just fueling gains — we’re building a movement.
-    </p>
-</section>
+  <style>
+    body { overflow-x: hidden; }
 
-
-<section class="features">
-  <h2>Why WheyOnWheels?</h2>
-  <div class="features-grid">
-    <div class="feature">
-  <h3>Mobile Convenience</h3>
-  <p>
-    Say goodbye to detours and delays — our smoothie truck parks right outside your gym. Whether it’s post-leg day or a quick protein top-up, we’re steps away with cold, ready-to-blend goodness. Just grab, sip, and go.
-  </p>
-</div>
-
-<div class="feature">
-  <h3>Science-Backed Nutrition</h3>
-  <p>
-    Every smoothie is crafted with premium-grade whey protein, balanced macros, and the option to add creatine & EAAs. Designed in collaboration with certified nutritionists to support real recovery and real gains.
-  </p>
-</div>
-
-<div class="feature">
-  <h3>Fitness Meets Fun</h3>
-  <p>
-    We gamify your grind. Take on mini fitness challenges to unlock discounts, earn loyalty rewards with every sip. Who says serious fitness can’t be seriously fun?
-  </p>
-</div>
-
-  </div>
-</section>
-<section class="reviews">
-  <h2>Leave a Review</h2>
-  <form action="/submit_review" method="POST" class="review-form">
-    {% if session.get('user') %}
-      <input type="hidden" name="name" value="{{ session['user']['username'] }}">
-      <p>Reviewing as <strong>{{ session['user']['username'] }}</strong></p>
-    {% else %}
-      <label for="name">Your Name:</label>
-      <input type="text" id="name" name="name" required>
-    {% endif %}
-
-    <label for="comment">Your Review:</label>
-    <textarea id="comment" name="comment" rows="4" required></textarea>
-
-    <button type="submit">Submit Review</button>
-  </form>
-</section>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const elements = document.querySelectorAll(".about-startup, .features");
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      entry.target.classList.toggle("animate-in", entry.isIntersecting);
-    });
-  }, { threshold: 0.3 });
-  elements.forEach((el) => observer.observe(el));
-});
-
-function updateAddonState(group) {
-  const smoothieSel = group.querySelector("select.smoothie");
-  const addonSelects = group.querySelectorAll("select.addon");
-  if (!smoothieSel) return;
-  addonSelects.forEach((addonSel) => {
-    if (!smoothieSel.value) {
-      addonSel.value = "";
-      addonSel.disabled = true;
-      addonSel.style.opacity = "0.5";
-    } else {
-      addonSel.disabled = false;
-      addonSel.style.opacity = "1";
+    .toast-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      align-items: flex-start;
+      margin-bottom: 15px;
     }
-  });
-}
 
-document.addEventListener("DOMContentLoaded", () => {
-  const url = new URL(window.location.href);
-  if (url.searchParams.get("smoothie")) {
-    document.querySelector(".form-container").scrollIntoView({ behavior: "smooth" });
-  }
-});
+    .toast-group label {
+      flex: 1 1 100%;
+      margin-bottom: 5px;
+    }
 
-function launchConfetti() {
-  const duration = 3000;
-  const end = Date.now() + duration;
-  (function frame() {
-    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
-    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
-</script>
+    .toast-group select,
+    .toast-group input[type="number"] {
+      flex: 1;
+      min-width: 0;
+    }
 
+    #discountNote {
+      display: none;
+      color: green;
+      margin-top: -10px;
+      margin-bottom: 10px;
+      font-weight: bold;
+    }
 
-<!-- REST ALL CONTENT UNCHANGED (about, features, footer…) -->
+    .remove-btn {
+      background: #ffffff;
+      color: black;
+      border: none;
+      margin-top: 4px;
+      padding: 6px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 14px;
+    }
 
-<script>
-  const prices = {{ prices | tojson }};
-  const toasts = {{ toasts | tojson }};
+    label, input, small {
+      font-family: 'Adieu', sans-serif;
+    }
 
-  function normalize(str) { return str.trim().toLowerCase(); }
+    .redeem-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 12px;
+    }
 
-  function calculateTotal() {
-    let total = 0;
-    let totalItems = 0;
+    .redeem-checkbox {
+      transform: scale(1);
+      cursor: pointer;
+    }
 
-    document.querySelectorAll(".toast-group").forEach(group => {
-      const toastSelect = group.querySelector("select.toast");
-      const qtyInput = group.querySelector("input[name='quantity[]']");
-      const toast = toastSelect.value;
-      const qty = parseInt(qtyInput.value) || 1;
+    .redeem-text {
+      font-size: 14px;
+    }
 
-      const key = Object.keys(prices).find(k => normalize(k) === normalize(toast));
-      if (toast && key) {
-        total += parseFloat(prices[key]) * qty;
-        totalItems += qty;
+    @media (max-width: 480px) {
+      .choose {
+        font-size: 12px !important;
       }
-    });
 
-    // --- DISCOUNT LOGIC ---
-    const discountNote = document.getElementById("discountNote");
-    if (totalItems >= 2) {
-      total *= 0.90;  // apply 10%
-      discountNote.style.display = "block";
-    } else {
-      discountNote.style.display = "none";
+      input {
+        font-size: 9px !important;
+      }
+
+      small {
+        font-size: 8px !important;
+        display: block;
+        margin-top: -4px !important;
+      }
+
+      .redeem-label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .redeem-checkbox {
+        transform: scale(0.7);
+        margin: 0 !important;
+      }
+
+      .redeem-text {
+        font-size: 10px;
+        line-height: 1;
+      }
     }
+  </style>
+</head>
 
-    // --- rewards ---
-    const toggle = document.getElementById("redeem_toggle");
-    const hidden = document.getElementById("redeem_points");
+<body>
 
-    if (toggle.checked) {
-      const maxRedeem = parseInt(hidden.dataset.max) || 0;
-      hidden.value = maxRedeem;
-      total -= maxRedeem;
-    } else {
-      hidden.value = 0;
-    }
+<nav class="navbar">
+  <div class="mobile-header">
+    <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <span class="mobile-title">WHEY-ON-WHEELS</span>
 
-    if (total < 0) total = 0;
-    document.getElementById("totalPrice").textContent = total.toFixed(2);
-  }
+    {% if session.get('user') %}
+      <a href="/profile" class="mobile-profile">👤</a>
+    {% endif %}
+  </div>
 
-  function addToast() {
-  const container = document.getElementById("toastContainer");
-  const newGroup = document.createElement("div");
-  newGroup.className = "toast-group";
-
-  const toastOptions = toasts
-    .map(item => `<option value="${item}">${item}</option>`)
-    .join("");
-
-  newGroup.innerHTML = `
-    <label>Choose a Toast and Quantity:</label>
-
-    <select name="toast[]" class="toast">
-      <option value="">None</option>
-      ${toastOptions}
-    </select>
-
-    <input type="number" name="quantity[]" min="1" value="1">
-
-    <!-- minus button only on added toast -->
-    <button type="button" class="remove-btn" onclick="removeToast(this)">➖</button>
-  `;
-
-  container.appendChild(newGroup);
-
-  // add listeners
-  newGroup.querySelectorAll("select, input").forEach(el => {
-    el.addEventListener("change", calculateTotal);
-    el.addEventListener("input", calculateTotal);
-  });
-
-  calculateTotal();
-}
-  function removeToast(button) {
-    const group = button.closest(".toast-group");
-    if (group) {
-      group.remove();
-      calculateTotal();
-    }
-  }
-  // initial listeners
-  document.addEventListener("DOMContentLoaded", () => {
-    document.querySelectorAll("select, input").forEach(el => {
-      el.addEventListener("change", calculateTotal);
-      el.addEventListener("input", calculateTotal);
-    });
-
-    document.getElementById("redeem_toggle").addEventListener("change", calculateTotal);
-    calculateTotal();
-  });
-</script>
-<script>
-  // Animate on scroll
-  document.addEventListener("DOMContentLoaded", function () {
-    const elements = document.querySelectorAll(".about-startup, .features");
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-in");
-        } else {
-          entry.target.classList.remove("animate-in");
-        }
-      });
-    }, {
-      threshold: 0.3
-    });
-
-    elements.forEach(el => observer.observe(el));
-  });
-
-  // Smooth scroll to About section
-  document.getElementById("scroll-about").addEventListener("click", function (e) {
-    e.preventDefault();
-    window.scrollTo({ top: 600, behavior: 'smooth' });
-  });
-
-  // Contact email popup
-  document.addEventListener("DOMContentLoaded", function () {
-    const contactLink = document.getElementById("contact-link");
-    if (contactLink) {
-      contactLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        alert("You can reach us at: wheyonwheels@gmail.com");
-        window.location.href = "mailto:wheyonwheels@gmail.com";
-      });
-    }
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("show-more-btn");
-  if (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".hidden-review").forEach(el => {
-        el.style.display = "block";
-      });
-      btn.style.display = "none"; // hide button after showing all
-    });
-  }
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
-
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
-  });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-  });
-});
-
-</script>
-
-<footer class="site-footer">
-  <div class="footer-container">
-    <div class="footer-section about">
-      <h3>WheyOnWheels</h3>
-      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+  <div class="navbar-container desktop-nav">
+    <div class="nav-left">
+      <ul>
+        <li><a href="/">Home</a></li>
+        <li><a href="/menu_select">Menu</a></li>
+        <li><a href="/order_select">Order</a></li>
+      </ul>
     </div>
 
-    <div class="footer-section contact">
-      <h4>Contact Us</h4>
-      <p>Email: <a href="mailto:wheyonwheelsmumbai@gmail.com">wheyonwheelsmumbai@gmail.com</a></p>
-      <p>Location: Mumbai, India</p>
+    <div class="nav-right">
+      <ul>
+        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="#" id="contact-link">Contact Us</a></li>
+        {% if session.get('user') %}
+          <li><a href="/profile">👤</a></li>
+          <li><a href="/logout">Logout</a></li>
+        {% else %}
+          <li><a href="/login">Login</a></li>
+        {% endif %}
+      </ul>
     </div>
+  </div>
 
-    <div class="footer-section social">
-      <h4>Follow Us</h4>
-      <div class="social-links">
-        <a href="https://instagram.com/whey_on_wheels" target="_blank">Instagram</a>
+  <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
+    <ul>
+      <li><a href="/">Home</a></li>
+      <li><a href="/menu_select">Menu</a></li>
+      <li><a href="/order_select">Order</a></li>
+      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="#" id="mobile-contact">Contact Us</a></li>
+      {% if session.get('user') %}
+        <li><a href="/profile">👤 Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+      {% else %}
+        <li><a href="/login">Login</a></li>
+      {% endif %}
+    </ul>
+  </div>
+</nav>
+
+<div class="form-container">
+  <h2>Place Your Order</h2>
+
+  <form method="POST" action="/order_toast" id="orderForm">
+
+    <div id="toastContainer">
+      <div class="toast-group">
+        <label class="choose">Choose a Toast and Quantity:</label>
+
+        <select name="toast[]" class="toast">
+          <option value="">None</option>
+          {% for item in toasts %}
+            <option value="{{ item }}">{{ item }}</option>
+          {% endfor %}
+        </select>
+
+        <input type="number" name="quantity[]" min="1" value="1">
       </div>
     </div>
-  </div>
 
-  <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
-</footer>
+    <div class="add-button" onclick="addToast(); calculateTotal();">
+      ➕ Add Another Order
+    </div>
 
-</body>
-</html>
+    <label class="redeem-label">
+      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
+      <span class="redeem-text">Redeem all reward points</span>
+    </label>
+
+    <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
+    <small>You have {{ user_rewards }} reward points</small>
+
+    <div style="margin: 20px 0; font-weight: bold; font-size: 1.2em;">
+      Total Bill: ₹<span id="totalPrice">0</span>
+    </div>
+
+    <div id="discountNote">🎉 10% discount applied (2 or more toasts)</div>
+
+    <button type="submit">Place Order</button>
+  </form>
+</div>
