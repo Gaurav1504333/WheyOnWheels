@@ -109,29 +109,35 @@
 
   small{
     font-size: 8px !important;
-    margin-top: -20px !important;
+    margin-top: -6px !important;
+    display: block;
+  }
+
+  /* Redeem row alignment fix */
+  .redeem-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
   }
 
   .redeem-checkbox {
-    transform: scale(0.6);
+    transform: scale(0.7);
     cursor: pointer;
-    margin-top: 10px !important; /* move down */
+    margin: 0 !important;
   }
 
   .redeem-text{
     font-size: 10px;
-    margin-top: -14px; /* move text up */
+    line-height: 1;
+    margin: 0 !important;
     display: inline-block;
-  }
-
-  .redeem-label {
-    align-items: flex-start;
   }
 
   .add-addon-btn{
     margin-top: -8px !important;
   }
 }
+
 
 
     
@@ -235,7 +241,7 @@
       <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
       <span class="redeem-text">Redeem all reward points</span>
     </label>
-
+    
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
@@ -538,6 +544,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
+
 
 
 
