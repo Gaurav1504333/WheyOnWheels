@@ -1439,7 +1439,7 @@ def verify_spin():
         # -------------------------------------------------------
         cursor.execute("""
             SELECT 1 FROM spin_claims 
-            WHERE user_id=%s AND milestone=%s
+            WHERE user_id=%s AND milestone=%s AND claimed=TRUE
         """, (user_id, milestone))
 
         if cursor.fetchone():
@@ -1478,7 +1478,8 @@ def verify_spin():
 
             sheet_loaded = True
 
-        except Exception:
+        except Exception as e:
+            print("Sheet error:", e)
             flash("Could not load operator data.", "error")
 
         # -------------------------------------------------------
@@ -1536,7 +1537,7 @@ def verify_spin():
             # -------------------------------------------------------
             cursor.execute("""
                 SELECT 1 FROM spin_claims 
-                WHERE user_id=%s AND milestone=%s
+                WHERE user_id=%s AND milestone=%s AND claimed=TRUE
             """, (user_id, milestone))
 
             if cursor.fetchone():
@@ -1544,23 +1545,44 @@ def verify_spin():
                 return redirect("/profile")
 
             # -------------------------------------------------------
-            # Atomic insert
+            # Insert claim
             # -------------------------------------------------------
             cursor.execute("""
                 INSERT INTO spin_claims 
-                (user_id, milestone, reward_points, operator_name, operator_code, operator_location)
-                VALUES (%s, %s, %s, %s, %s, %s)
+                (user_id, milestone, claimed, reward_points, operator_name, operator_code, operator_location)
+                VALUES (%s, %s, TRUE, %s, %s, %s, %s)
             """, (user_id, milestone, form_points, operator_name, operator_code, operator_location))
 
+            # -------------------------------------------------------
+            # Add reward points
+            # -------------------------------------------------------
             cursor.execute("""
                 INSERT INTO rewards (user_id, points)
                 VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE points = points + VALUES(points)
             """, (user_id, form_points))
 
+            # -------------------------------------------------------
+            # Log operator verification
+            # -------------------------------------------------------
+            cursor.execute("""
+                INSERT INTO operator_spin_logs
+                (user_id, milestone, operator_name, operator_code, operator_location, points_added)
+                VALUES (%s, %s, %s, %s, %s, %s)
+            """, (
+                user_id,
+                milestone,
+                operator_name,
+                operator_code,
+                operator_location,
+                form_points
+            ))
+
             db.commit()
 
+            # -------------------------------------------------------
             # Clear temp session
+            # -------------------------------------------------------
             for k in ['spin_valid_code', 'spin_operator_name', 'spin_operator_code', 'spin_operator_location']:
                 session.pop(k, None)
 
@@ -1582,6 +1604,7 @@ def verify_spin():
     finally:
         cursor.close()
         db.close()
+
 
 
 @app.route("/process_spin_verification", methods=["POST"])
@@ -1736,6 +1759,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
