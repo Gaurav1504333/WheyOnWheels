@@ -270,111 +270,51 @@
 <!-- Confetti JS -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 <script>
-/* ======================================================
-   SCROLL ANIMATIONS
-====================================================== */
 document.addEventListener("DOMContentLoaded", function () {
   const elements = document.querySelectorAll(".about-startup, .features");
-  const observer = new IntersectionObserver(entries => {
-    entries.forEach(entry => {
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
       entry.target.classList.toggle("animate-in", entry.isIntersecting);
     });
   }, { threshold: 0.3 });
-  elements.forEach(el => observer.observe(el));
+  elements.forEach((el) => observer.observe(el));
 });
 
-
-/* ======================================================
-   HELPERS
-====================================================== */
-function normalize(str) {
-  return str.trim().toLowerCase();
+function updateAddonState(group) {
+  const smoothieSel = group.querySelector("select.smoothie");
+  const addonSelects = group.querySelectorAll("select.addon");
+  if (!smoothieSel) return;
+  addonSelects.forEach((addonSel) => {
+    if (!smoothieSel.value) {
+      addonSel.value = "";
+      addonSel.disabled = true;
+      addonSel.style.opacity = "0.5";
+    } else {
+      addonSel.disabled = false;
+      addonSel.style.opacity = "1";
+    }
+  });
 }
 
-function scrollToAbout() {
-  const about = document.querySelector(".about-startup");
-  if (!about) return;
-
-  const offset = -200; // ✅ mobile-safe offset
-  const y = about.getBoundingClientRect().top + window.pageYOffset + offset;
-  window.scrollTo({ top: y, behavior: "smooth" });
-}
-
-function contactUs() {
-  window.location.href = "mailto:wheyonwheels@gmail.com";
-}
-
-function closeMobileMenu() {
-  const hamburger = document.getElementById("hamburger");
-  const mobileMenu = document.getElementById("mobile-menu");
-  if (!hamburger || !mobileMenu) return;
-
-  mobileMenu.classList.remove("open");
-  hamburger.classList.remove("active");
-  hamburger.setAttribute("aria-expanded", "false");
-  mobileMenu.setAttribute("aria-hidden", "true");
-}
-
-
-/* ======================================================
-   ABOUT + CONTACT (DESKTOP + MOBILE FIXED)
-====================================================== */
-document.addEventListener("DOMContentLoaded", () => {
-  const desktopAbout = document.getElementById("scroll-about");
-  const mobileAbout = document.getElementById("mobile-about");
-  const desktopContact = document.getElementById("contact-link");
-  const mobileContact = document.getElementById("mobile-contact");
-
-  if (desktopAbout) desktopAbout.addEventListener("click", e => {
-    e.preventDefault();
-    scrollToAbout();
-  });
-
-  if (mobileAbout) mobileAbout.addEventListener("click", e => {
-    e.preventDefault();
-    scrollToAbout();
-    closeMobileMenu();
-  });
-
-  if (desktopContact) desktopContact.addEventListener("click", e => {
-    e.preventDefault();
-    contactUs();
-  });
-
-  if (mobileContact) mobileContact.addEventListener("click", e => {
-    e.preventDefault();
-    contactUs();
-    closeMobileMenu();
-  });
-});
-
-
-/* ======================================================
-   AUTO-SCROLL TO FORM (URL PARAM)
-====================================================== */
 document.addEventListener("DOMContentLoaded", () => {
   const url = new URL(window.location.href);
   if (url.searchParams.get("smoothie")) {
-    document.querySelector(".form-container")
-      ?.scrollIntoView({ behavior: "smooth" });
+    document.querySelector(".form-container").scrollIntoView({ behavior: "smooth" });
   }
 });
 
-
-/* ======================================================
-   DATA FROM BACKEND
-====================================================== */
 const prices = {{ prices | tojson }};
 const smoothies = {{ smoothies | tojson }};
 const addons = {{ addons | tojson }};
 let discountTriggered = false;
 
+function normalize(str) {
+  return str.trim().toLowerCase();
+}
 
-/* ======================================================
-   CONFETTI
-====================================================== */
 function launchConfetti() {
-  const end = Date.now() + 3000;
+  const duration = 3000;
+  const end = Date.now() + duration;
   (function frame() {
     confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
     confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
@@ -382,84 +322,73 @@ function launchConfetti() {
   })();
 }
 
-
-/* ======================================================
-   ADDON STATE
-====================================================== */
-function updateAddonState(group) {
-  const smoothieSel = group.querySelector("select.smoothie");
-  const addonSelects = group.querySelectorAll("select.addon");
-  if (!smoothieSel) return;
-
-  addonSelects.forEach(addonSel => {
-    addonSel.disabled = !smoothieSel.value;
-    addonSel.style.opacity = smoothieSel.value ? "1" : "0.5";
-    if (!smoothieSel.value) addonSel.value = "";
-  });
+function addAddon(button) {
+  const wrapper = button.parentElement;
+  const group = wrapper.parentElement;
+  const clone = wrapper.cloneNode(true);
+  clone.querySelector("select").value = "";
+  clone.querySelector("select").addEventListener("change", calculateTotal);
+  clone.querySelector("select").addEventListener("input", calculateTotal);
+  group.appendChild(clone);
+  updateAddonState(group);
+  calculateTotal();
 }
 
-
-/* ======================================================
-   TOTAL CALCULATION (UNCHANGED LOGIC)
-====================================================== */
 function calculateTotal() {
   let total = 0;
   let smoothieCount = 0;
 
-  document.querySelectorAll(".smoothie-group").forEach(group => {
+  document.querySelectorAll(".smoothie-group").forEach((group) => {
     const smoothie = group.querySelector("select.smoothie").value;
     const quantity = parseInt(group.querySelector("input").value) || 1;
-    const smoothieKey = Object.keys(prices)
-      .find(k => normalize(k) === normalize(smoothie));
 
+    const smoothieKey = Object.keys(prices).find(
+      (k) => normalize(k) === normalize(smoothie)
+    );
     if (!smoothie || !smoothieKey) return;
 
-    total += prices[smoothieKey] * quantity;
+    const price = parseFloat(prices[smoothieKey]) || 0;
+    total += price * quantity;
     smoothieCount += quantity;
 
-    group.querySelectorAll("select.addon").forEach(addonSel => {
-      const addonKey = Object.keys(prices)
-        .find(k => normalize(k) === normalize(addonSel.value));
-      if (addonKey) total += prices[addonKey];
+    const addonSelects = group.querySelectorAll("select.addon");
+    addonSelects.forEach((addonSel) => {
+      const addon = addonSel.value;
+      const addonKey = Object.keys(prices).find(
+        (k) => normalize(k) === normalize(addon)
+      );
+      if (addon && addonKey) {
+        total += parseFloat(prices[addonKey]) || 0;
+      }
     });
   });
 
   const discountNote = document.getElementById("discountNote");
   if (smoothieCount >= 2) {
     total *= 0.9;
-    discountNote && (discountNote.style.display = "block");
+    if (discountNote) discountNote.style.display = "block";
     if (!discountTriggered) {
       launchConfetti();
       discountTriggered = true;
     }
   } else {
-    discountNote && (discountNote.style.display = "none");
+    if (discountNote) discountNote.style.display = "none";
     discountTriggered = false;
   }
 
   const redeemToggle = document.getElementById("redeem_toggle");
   const redeemInput = document.getElementById("redeem_points");
 
-  if (redeemToggle?.checked && redeemInput) {
-    total -= parseInt(redeemInput.dataset.max || 0);
+  if (redeemToggle && redeemToggle.checked && redeemInput) {
+    const maxRedeem = parseInt(redeemInput.dataset.max) || 0;
+    redeemInput.value = maxRedeem;
+    total -= maxRedeem;
+  } else if (redeemInput) {
+    redeemInput.value = 0;
   }
 
-  document.getElementById("totalPrice").textContent =
-    Math.max(total, 0).toFixed(2);
-}
-
-
-/* ======================================================
-   ADD / REMOVE SMOOTHIES
-====================================================== */
-function addAddon(button) {
-  const wrapper = button.parentElement;
-  const group = wrapper.parentElement;
-  const clone = wrapper.cloneNode(true);
-  clone.querySelector("select").value = "";
-  group.appendChild(clone);
-  updateAddonState(group);
-  calculateTotal();
+  if (total < 0) total = 0;
+  document.getElementById("totalPrice").textContent = total.toFixed(2);
 }
 
 function addSmoothie() {
@@ -467,59 +396,131 @@ function addSmoothie() {
   const newGroup = document.createElement("div");
   newGroup.className = "smoothie-group";
 
+  const smoothieOptions = smoothies
+    .map((item) => `<option value="${item}">${item}</option>`)
+    .join("");
+
+  const addonOptions = addons
+    .map((item) => `<option value="${item}">${item}</option>`)
+    .join("");
+
   newGroup.innerHTML = `
-    <select class="smoothie"><option value="">None</option>
-      ${smoothies.map(s => `<option>${s}</option>`).join("")}
+    <label>Choose a Smoothie and Quantity:</label>
+
+    <select name="smoothie[]" class="smoothie">
+      <option value="">None</option>
+      ${smoothieOptions}
     </select>
-    <input type="number" min="1" value="1">
+
+    <input type="number" name="quantity[]" min="1" value="1">
+
     <div class="addon-wrapper">
-      <select class="addon"><option value="">No Addon</option>
-        ${addons.map(a => `<option>${a}</option>`).join("")}
+      <select name="addon[][]" class="addon">
+        <option value="">No Addon</option>
+        ${addonOptions}
       </select>
-      <button type="button" onclick="addAddon(this)">➕</button>
-      <button type="button" onclick="removeSmoothie(this)">➖</button>
-    </div>`;
+
+      <button type="button" class="add-addon-btn" onclick="addAddon(this)">➕</button>
+      <button type="button" class="remove-btn" onclick="removeSmoothie(this)">➖</button>
+    </div>
+  `;
 
   container.appendChild(newGroup);
   updateAddonState(newGroup);
-  newGroup.querySelectorAll("select,input")
-    .forEach(el => el.addEventListener("change", calculateTotal));
+
+  newGroup.querySelectorAll("select, input").forEach((el) => {
+    el.addEventListener("change", calculateTotal);
+    el.addEventListener("input", calculateTotal);
+  });
+
+  calculateTotal();
+}
+function removeSmoothie(btn){
+  const group = btn.closest(".smoothie-group");
+  group.remove();
   calculateTotal();
 }
 
-function removeSmoothie(btn) {
-  btn.closest(".smoothie-group").remove();
-  calculateTotal();
-}
 
-
-/* ======================================================
-   MOBILE MENU
-====================================================== */
 document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll("select.smoothie").forEach((smoothieSel) => {
+    smoothieSel.addEventListener("change", () => {
+      const group = smoothieSel.closest(".smoothie-group");
+      updateAddonState(group);
+      calculateTotal();
+    });
+  });
+
+  document.querySelectorAll("select, input").forEach((el) => {
+    el.addEventListener("change", calculateTotal);
+    el.addEventListener("input", calculateTotal);
+  });
+
+  const redeemToggle = document.getElementById("redeem_toggle");
+  if (redeemToggle) redeemToggle.addEventListener("change", calculateTotal);
+
+  const orderForm = document.getElementById("orderForm");
+  if (orderForm) {
+    orderForm.addEventListener("submit", () => calculateTotal());
+  }
+
+  document.querySelectorAll(".smoothie-group").forEach((group) => {
+    updateAddonState(group);
+  });
+
+  calculateTotal();
+});
+
+document.getElementById("contact-link").addEventListener("click", function (e) {
+  e.preventDefault();
+  alert("You can reach us at: wheyonwheels@gmail.com");
+  window.location.href = "mailto:wheyonwheels@gmail.com";
+});
+
+document.getElementById("scroll-about").addEventListener("click", function (e) {
+  e.preventDefault();
+  window.scrollTo({ top: 600, behavior: "smooth" });
+});
+
+document.addEventListener("DOMContentLoaded", () => {
+  const hamburger = document.getElementById("hamburger");
+  const navLinks = document.getElementById("nav-links");
+  hamburger.addEventListener("click", () => {
+    navLinks.classList.toggle("active");
+  });
+});
+
+document.addEventListener("DOMContentLoaded", function () {
   const hamburger = document.getElementById("hamburger");
   const mobileMenu = document.getElementById("mobile-menu");
   if (!hamburger || !mobileMenu) return;
 
-  hamburger.addEventListener("click", () => {
+  hamburger.addEventListener("click", function () {
     const open = mobileMenu.classList.toggle("open");
     hamburger.classList.toggle("active", open);
-    hamburger.setAttribute("aria-expanded", open);
     mobileMenu.setAttribute("aria-hidden", !open);
+    hamburger.setAttribute("aria-expanded", open);
   });
 
-  mobileMenu.querySelectorAll("a").forEach(a =>
-    a.addEventListener("click", closeMobileMenu)
-  );
+  mobileMenu.querySelectorAll("a").forEach((a) => {
+    a.addEventListener("click", () => {
+      mobileMenu.classList.remove("open");
+      hamburger.classList.remove("active");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      hamburger.setAttribute("aria-expanded", "false");
+    });
+  });
 
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") closeMobileMenu();
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      mobileMenu.classList.remove("open");
+      hamburger.classList.remove("active");
+      mobileMenu.setAttribute("aria-hidden", "true");
+      hamburger.setAttribute("aria-expanded", "false");
+    }
   });
 });
 </script>
-
-
-
 
   <!-- Footer Section -->
   <footer class="site-footer">
@@ -551,6 +552,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
