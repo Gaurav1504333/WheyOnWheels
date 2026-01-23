@@ -284,95 +284,123 @@
 
 
   <script>
-  // Animate on scroll
-  document.addEventListener("DOMContentLoaded", function () {
-    const elements = document.querySelectorAll(".about-startup, .features");
+document.addEventListener("DOMContentLoaded", function () {
 
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-in");
-        } else {
-          entry.target.classList.remove("animate-in");
-        }
-      });
-    }, {
-      threshold: 0.3
+  /* ===============================
+     ANIMATE SECTIONS ON SCROLL
+  ================================ */
+  const animatedSections = document.querySelectorAll(
+    ".about-startup, .features, .fade-in-section"
+  );
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-in", "is-visible");
+        sectionObserver.unobserve(entry.target); // animate once
+      }
     });
+  }, { threshold: 0.25 });
 
-    elements.forEach(el => observer.observe(el));
-  });
+  animatedSections.forEach(sec => sectionObserver.observe(sec));
 
-  // Smooth scroll to About section
-  document.getElementById("scroll-about").addEventListener("click", function (e) {
+
+  /* ===============================
+     ABOUT US SCROLL (DESKTOP + MOBILE)
+  ================================ */
+function scrollToAbout() {
+  const about = document.querySelector(".about-startup");
+  if (!about) return;
+
+  const yOffset = -400; // 👈 reduce scroll by 200px
+  const y = about.getBoundingClientRect().top + window.pageYOffset + yOffset;
+
+  window.scrollTo({ top: y, behavior: "smooth" });
+}
+
+
+  const desktopAbout = document.getElementById("scroll-about");
+  const mobileAbout = document.getElementById("mobile-about");
+
+  if (desktopAbout) desktopAbout.addEventListener("click", e => {
     e.preventDefault();
-    window.scrollTo({ top: 600, behavior: 'smooth' });
+    scrollToAbout();
   });
 
-  // Contact email popup
-  document.addEventListener("DOMContentLoaded", function () {
-    const contactLink = document.getElementById("contact-link");
-    if (contactLink) {
-      contactLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        alert("You can reach us at: wheyonwheels@gmail.com");
-        window.location.href = "mailto:wheyonwheels@gmail.com";
-      });
-    }
+  if (mobileAbout) mobileAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
+    closeMobileMenu();
   });
-  document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("show-more-btn");
-  if (btn) {
-    btn.addEventListener("click", function () {
+
+
+  /* ===============================
+     CONTACT US (DESKTOP + MOBILE)
+  ================================ */
+  function contactUs() {
+    window.location.href = "mailto:wheyonwheels@gmail.com";
+  }
+
+  const desktopContact = document.getElementById("contact-link");
+  const mobileContact = document.getElementById("mobile-contact");
+
+  if (desktopContact) desktopContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+  });
+
+  if (mobileContact) mobileContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+    closeMobileMenu();
+  });
+
+
+  /* ===============================
+     SHOW MORE REVIEWS
+  ================================ */
+  const showMoreBtn = document.getElementById("show-more-btn");
+  if (showMoreBtn) {
+    showMoreBtn.addEventListener("click", () => {
       document.querySelectorAll(".hidden-review").forEach(el => {
         el.style.display = "block";
       });
-      btn.style.display = "none"; // hide button after showing all
+      showMoreBtn.style.display = "none";
     });
   }
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
 
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
+
+  /* ===============================
+     MOBILE MENU TOGGLE
+  ================================ */
+  const hamburger = document.getElementById("hamburger");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  function closeMobileMenu() {
+    if (!hamburger || !mobileMenu) return;
+    mobileMenu.classList.remove("open");
+    hamburger.classList.remove("active");
+    mobileMenu.setAttribute("aria-hidden", "true");
+    hamburger.setAttribute("aria-expanded", "false");
+  }
+
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener("click", () => {
+      const open = mobileMenu.classList.toggle("open");
+      hamburger.classList.toggle("active", open);
+      mobileMenu.setAttribute("aria-hidden", !open);
+      hamburger.setAttribute("aria-expanded", open);
     });
-  });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
 
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
+    // Close on ESC
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeMobileMenu();
     });
-  });
+  }
 
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-  });
 });
 </script>
+
 
 
     <!-- Footer Section -->
@@ -404,6 +432,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
+
 
 
 
