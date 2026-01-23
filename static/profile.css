@@ -644,7 +644,6 @@ footer a:hover {
 
   footer {
     margin-top: -12px !important;
-    font-size: 8px !important;
   }
   .profile-container {
     width: 80%;
@@ -834,6 +833,16 @@ footer a:hover {
   transform: rotate(90deg);
   color: #ffffff;
 }
+  footer {
+    margin-top: -12px !important;
+    font-size: 12px !important;
+  }
+  footer a{
+    font-size: 12px !important;
+  }
+  footer p{
+    font-size: 12px !important;
+  }
 }
 /* Extra small screens */
 @media (max-width: 460px) {
@@ -858,6 +867,7 @@ footer a:hover {
     margin-top: 30px;
   }
 }
+
 
 
 
