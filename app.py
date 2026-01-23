@@ -1780,4 +1780,9 @@ def submit_review():
 
 
 
+from flask import send_from_directory
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory('.', 'sitemap.xml', mimetype='application/xml')
 
