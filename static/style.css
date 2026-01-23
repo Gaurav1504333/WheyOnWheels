@@ -1341,7 +1341,11 @@ footer a:hover {
   .info-section ul li::before {
     font-size: 12px;
   }
+  .avvatar-content{
+    margin-top: -24px;
+  }
 }
+
 
 
 
