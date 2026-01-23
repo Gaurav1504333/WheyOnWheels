@@ -1762,9 +1762,3 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
-from flask import send_from_directory
-
-@app.route('/sitemap.xml')
-def sitemap():
-    return send_from_directory('static', 'sitemap.xml', mimetype='application/xml')
-
