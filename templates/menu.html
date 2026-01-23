@@ -37,7 +37,7 @@
 
     <div class="nav-right">
       <ul>
-        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="/" id="scroll-about">About Us</a></li>
         <li><a href="#" id="contact-link">Contact Us</a></li>
         {% if session.get('user') %}
           <li><a href="/profile">👤</a></li>
@@ -55,7 +55,7 @@
       <li><a href="/">Home</a></li>
       <li><a href="/menu_select">Menu</a></li>
       <li><a href="/order_select">Order</a></li>
-      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="/" id="mobile-about">About Us</a></li>
       <li><a href="#" id="mobile-contact">Contact Us</a></li>
       {% if session.get('user') %}
         <li><a href="/profile">👤 Profile</a></li>
@@ -301,5 +301,6 @@ function scrollToAbout() {
 </body>
 
 </html>
+
 
 
