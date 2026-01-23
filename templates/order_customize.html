@@ -174,7 +174,7 @@ button[type="submit"]:hover {
 
     <div class="nav-right">
       <ul>
-        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="/" id="scroll-about">About Us</a></li>
         <li><a href="#" id="contact-link">Contact Us</a></li>
         {% if session.get('user') %}
           <li><a href="/profile">👤</a></li>
@@ -192,7 +192,7 @@ button[type="submit"]:hover {
       <li><a href="/">Home</a></li>
       <li><a href="/menu_select">Menu</a></li>
       <li><a href="/order_select">Order</a></li>
-      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="/" id="mobile-about">About Us</a></li>
       <li><a href="#" id="mobile-contact">Contact Us</a></li>
       {% if session.get('user') %}
         <li><a href="/profile">👤 Profile</a></li>
@@ -264,224 +264,173 @@ button[type="submit"]:hover {
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-const selects = document.querySelectorAll("select");
-const totalEl = document.getElementById("total");
-const totalInput = document.getElementById("total_price");
-
-function launchConfetti() {
-  const duration = 2000;
-  const end = Date.now() + duration;
-  (function frame() {
-    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
-    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
-
-function updatePriceAndMacros() {
-  let total = 0;
-
-  selects.forEach(sel => {
-    const opt = sel.options[sel.selectedIndex];
-    const macrosDiv = document.getElementById(sel.id + "-macros");
-    if (opt && opt.dataset.price) {
-      const price = parseFloat(opt.dataset.price);
-      total += price;
-
-      const cal = parseFloat(opt.dataset.cal) || 0;
-      const protein = parseFloat(opt.dataset.protein) || 0;
-      const carbs = parseFloat(opt.dataset.carbs) || 0;
-      const fat = parseFloat(opt.dataset.fat) || 0;
-
-      macrosDiv.textContent = `Calories: ${cal} | Protein: ${protein}g | Carbs: ${carbs}g | Fat: ${fat}g`;
-    } else {
-      macrosDiv.textContent = "Calories: 0 | Protein: 0g | Carbs: 0g | Fat: 0g";
-    }
-  });
-
-  totalEl.textContent = total.toFixed(2);
-  totalInput.value = total.toFixed(2);
-}
-
-selects.forEach(sel => sel.addEventListener("change", updatePriceAndMacros));
-document.getElementById("customize-form").addEventListener("submit", launchConfetti);
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
-
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
-  });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-  });
-});
-</script>
-<script>
-  // Animate on scroll
-  document.addEventListener("DOMContentLoaded", function () {
-    const elements = document.querySelectorAll(".about-startup, .features");
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-in");
-        } else {
-          entry.target.classList.remove("animate-in");
-        }
-      });
-    }, {
-      threshold: 0.3
-    });
-
-    elements.forEach(el => observer.observe(el));
-  });
-
-  // Smooth scroll to About section
-  document.getElementById("scroll-about").addEventListener("click", function (e) {
-    e.preventDefault();
-    window.scrollTo({ top: 1100, behavior: 'smooth' });
-  });
-
-  // Contact email popup
-  document.addEventListener("DOMContentLoaded", function () {
-    const contactLink = document.getElementById("contact-link");
-    if (contactLink) {
-      contactLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        alert("You can reach us at: wheyonwheels@gmail.com");
-        window.location.href = "mailto:wheyonwheels@gmail.com";
-      });
-    }
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("show-more-btn");
-  if (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".hidden-review").forEach(el => {
-        el.style.display = "block";
-      });
-      btn.style.display = "none"; // hide button after showing all
-    });
-  }
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
-
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
-  });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-  });
-});
-
-</script>
-<script>
 document.addEventListener("DOMContentLoaded", function () {
+
+  /* ===============================
+     MOBILE MENU
+  ================================ */
   const hamburger = document.getElementById("hamburger");
   const mobileMenu = document.getElementById("mobile-menu");
 
-  if (!hamburger || !mobileMenu) return;
+  function closeMobileMenu() {
+    if (!hamburger || !mobileMenu) return;
+    mobileMenu.classList.remove("open");
+    hamburger.classList.remove("active");
+    hamburger.setAttribute("aria-expanded", "false");
+    mobileMenu.setAttribute("aria-hidden", "true");
+  }
 
-  hamburger.addEventListener("click", function () {
-    const open = mobileMenu.classList.toggle("open");
-
-    // 🔥 This line enables the vertical / cross animation
-    hamburger.classList.toggle("active", open);
-
-    hamburger.setAttribute("aria-expanded", open);
-    mobileMenu.setAttribute("aria-hidden", !open);
-  });
-
-  // Close menu when a link is clicked
-  mobileMenu.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", () => {
-      mobileMenu.classList.remove("open");
-      hamburger.classList.remove("active"); // reset animation
-      hamburger.setAttribute("aria-expanded", "false");
-      mobileMenu.setAttribute("aria-hidden", "true");
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener("click", () => {
+      const open = mobileMenu.classList.toggle("open");
+      hamburger.classList.toggle("active", open);
+      hamburger.setAttribute("aria-expanded", open);
+      mobileMenu.setAttribute("aria-hidden", !open);
     });
+
+    mobileMenu.querySelectorAll("a").forEach(link => {
+      link.addEventListener("click", closeMobileMenu);
+    });
+
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeMobileMenu();
+    });
+  }
+
+
+  /* ===============================
+     ABOUT US SCROLL (OFFSET FIXED)
+  ================================ */
+  function scrollToAbout() {
+    const about = document.querySelector(".about-startup");
+    if (!about) return;
+
+    const yOffset = -200; // 👈 adjust if needed
+    const y = about.getBoundingClientRect().top + window.pageYOffset + yOffset;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }
+
+  const desktopAbout = document.getElementById("scroll-about");
+  const mobileAbout = document.getElementById("mobile-about");
+
+  if (desktopAbout) desktopAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
   });
 
-  // Close on Escape key
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      mobileMenu.classList.remove("open");
-      hamburger.classList.remove("active");
-      hamburger.setAttribute("aria-expanded", "false");
-      mobileMenu.setAttribute("aria-hidden", "true");
-    }
+  if (mobileAbout) mobileAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
+    closeMobileMenu();
   });
+
+
+  /* ===============================
+     CONTACT US
+  ================================ */
+  function contactUs() {
+    window.location.href = "mailto:wheyonwheels@gmail.com";
+  }
+
+  const desktopContact = document.getElementById("contact-link");
+  const mobileContact = document.getElementById("mobile-contact");
+
+  if (desktopContact) desktopContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+  });
+
+  if (mobileContact) mobileContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+    closeMobileMenu();
+  });
+
+
+  /* ===============================
+     SCROLL ANIMATIONS
+  ================================ */
+  const animatedSections = document.querySelectorAll(
+    ".about-startup, .features, .fade-in-section"
+  );
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-in", "is-visible");
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.25 });
+
+  animatedSections.forEach(sec => observer.observe(sec));
+
+
+  /* ===============================
+     SHOW MORE REVIEWS
+  ================================ */
+  const showMoreBtn = document.getElementById("show-more-btn");
+  if (showMoreBtn) {
+    showMoreBtn.addEventListener("click", () => {
+      document.querySelectorAll(".hidden-review").forEach(el => {
+        el.style.display = "block";
+      });
+      showMoreBtn.style.display = "none";
+    });
+  }
+
+
+  /* ===============================
+     PRICE + MACROS CALCULATION
+  ================================ */
+  const selects = document.querySelectorAll("select");
+  const totalEl = document.getElementById("total");
+  const totalInput = document.getElementById("total_price");
+
+  function updatePriceAndMacros() {
+    let total = 0;
+
+    selects.forEach(sel => {
+      const opt = sel.options[sel.selectedIndex];
+      const macrosDiv = document.getElementById(sel.id + "-macros");
+
+      if (opt && opt.dataset.price) {
+        const price = parseFloat(opt.dataset.price);
+        total += price;
+
+        macrosDiv.textContent =
+          `Calories: ${opt.dataset.cal || 0} | Protein: ${opt.dataset.protein || 0}g | ` +
+          `Carbs: ${opt.dataset.carbs || 0}g | Fat: ${opt.dataset.fat || 0}g`;
+      } else if (macrosDiv) {
+        macrosDiv.textContent =
+          "Calories: 0 | Protein: 0g | Carbs: 0g | Fat: 0g";
+      }
+    });
+
+    if (totalEl) totalEl.textContent = total.toFixed(2);
+    if (totalInput) totalInput.value = total.toFixed(2);
+  }
+
+  selects.forEach(sel => sel.addEventListener("change", updatePriceAndMacros));
+
+
+  /* ===============================
+     CONFETTI ON SUBMIT
+  ================================ */
+  const form = document.getElementById("customize-form");
+  if (form) {
+    form.addEventListener("submit", () => {
+      const end = Date.now() + 2000;
+      (function frame() {
+        confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+        confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+        if (Date.now() < end) requestAnimationFrame(frame);
+      })();
+    });
+  }
+
 });
 </script>
+
 </body>
 </html>
-
-
-
-
-
-
-
