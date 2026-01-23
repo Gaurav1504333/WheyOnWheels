@@ -745,6 +745,9 @@ footer a:hover {
   .logo img {
     height: 54px;
   }
+  .hero_title{
+    margin-top:12px;
+  }
 
   .nav-left ul,
   .nav-right ul {
@@ -1345,6 +1348,7 @@ footer a:hover {
     margin-top: -24px;
   }
 }
+
 
 
 
