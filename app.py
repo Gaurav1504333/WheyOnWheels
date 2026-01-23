@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import pandas as pd
 import mysql.connector
 from datetime import datetime
+from flask import send_from_directory
 import traceback
 import os
 
@@ -43,12 +44,14 @@ ICECREAM_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGMpB5
 def inject_user():
     return dict(user=session.get('user'))
 
-from flask import send_from_directory
 
 @app.route('/sitemap.xml')
 def sitemap():
-    return send_from_directory('.', 'sitemap.xml')
-
+    return send_from_directory(
+        directory=app.root_path,
+        path='sitemap.xml',
+        mimetype='application/xml'
+    )
 
 @app.route('/')
 def home():
@@ -1769,4 +1772,5 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
