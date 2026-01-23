@@ -43,6 +43,13 @@ ICECREAM_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGMpB5
 def inject_user():
     return dict(user=session.get('user'))
 
+from flask import send_from_directory
+
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_from_directory('.', 'sitemap.xml')
+
+
 @app.route('/')
 def home():
     db = get_db_connection()
@@ -1762,3 +1769,4 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
