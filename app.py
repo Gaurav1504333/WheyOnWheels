@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import pandas as pd
 import mysql.connector
 from datetime import datetime
-from flask import send_from_directory
+from flask import send_file
 import traceback
 import os
 
@@ -47,11 +47,11 @@ def inject_user():
 
 @app.route('/sitemap.xml')
 def sitemap():
-    return send_from_directory(
-        directory=app.root_path,
-        path='sitemap.xml',
+    return send_file(
+        os.path.join(app.root_path, 'sitemap.xml'),
         mimetype='application/xml'
     )
+
 
 @app.route('/')
 def home():
@@ -1772,5 +1772,6 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
