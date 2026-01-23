@@ -325,12 +325,16 @@ document.addEventListener("DOMContentLoaded", function () {
   /* ===============================
      ABOUT US SCROLL (DESKTOP + MOBILE)
   ================================ */
-  function scrollToAbout() {
-    const about = document.querySelector(".about-startup");
-    if (about) {
-      about.scrollIntoView({ behavior: "smooth" });
-    }
-  }
+function scrollToAbout() {
+  const about = document.querySelector(".about-startup");
+  if (!about) return;
+
+  const yOffset = -200; // 👈 reduce scroll by 200px
+  const y = about.getBoundingClientRect().top + window.pageYOffset + yOffset;
+
+  window.scrollTo({ top: y, behavior: "smooth" });
+}
+
 
   const desktopAbout = document.getElementById("scroll-about");
   const mobileAbout = document.getElementById("mobile-about");
@@ -463,6 +467,7 @@ document.addEventListener("DOMContentLoaded", function () {
 </body>
 
 </html>
+
 
 
 
