@@ -142,112 +142,118 @@
   </div>
 
   <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const target = document.querySelector(".about-startup");
+document.addEventListener("DOMContentLoaded", function () {
 
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("animate-in");
-          } else {
-            entry.target.classList.remove("animate-in");
-          }
-        });
-      }, {
-        threshold: 0.3
-      });
+  /* ===============================
+     ANIMATE SECTIONS ON SCROLL
+  ================================ */
+  const animatedSections = document.querySelectorAll(
+    ".about-startup, .features, .fade-in-section"
+  );
 
-      if (target) observer.observe(target);
-    });
-  </script>
-
-  <script>
-    document.addEventListener("DOMContentLoaded", function () {
-      const elements = document.querySelectorAll(".about-startup, .features");
-
-      const observer = new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("animate-in");
-          } else {
-            entry.target.classList.remove("animate-in");
-          }
-        });
-      }, {
-        threshold: 0.3
-      });
-
-      elements.forEach(el => observer.observe(el));
-    });
-  </script>
-
-  <script>
-    document.getElementById("scroll-about").addEventListener("click", function (e) {
-      e.preventDefault();
-
-      const profileContainer = document.querySelector(".profile-container");
-
-      if (profileContainer) {
-        const rect = profileContainer.getBoundingClientRect();
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        const targetY = rect.top + scrollTop + rect.height + 60;
-
-        window.scrollTo({
-          top: targetY,
-          behavior: 'smooth'
-        });
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-in", "is-visible");
+        sectionObserver.unobserve(entry.target); // animate once
       }
     });
-  </script>
+  }, { threshold: 0.25 });
 
-  <script>
-    document.getElementById("contact-link").addEventListener("click", function (e) {
-      e.preventDefault();
-      alert("You can reach us at: wheyonwheels@gmail.com");
-      window.location.href = "mailto:wheyonwheels@gmail.com";
-    });
-  document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
+  animatedSections.forEach(sec => sectionObserver.observe(sec));
 
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
-  });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
 
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
+  /* ===============================
+     ABOUT US SCROLL (DESKTOP + MOBILE)
+  ================================ */
+  function scrollToAbout() {
+    const about = document.querySelector(".about-startup");
+    if (about) {
+      about.scrollIntoView({ behavior: "smooth" });
     }
+  }
+
+  const desktopAbout = document.getElementById("scroll-about");
+  const mobileAbout = document.getElementById("mobile-about");
+
+  if (desktopAbout) desktopAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
   });
+
+  if (mobileAbout) mobileAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
+    closeMobileMenu();
+  });
+
+
+  /* ===============================
+     CONTACT US (DESKTOP + MOBILE)
+  ================================ */
+  function contactUs() {
+    window.location.href = "mailto:wheyonwheels@gmail.com";
+  }
+
+  const desktopContact = document.getElementById("contact-link");
+  const mobileContact = document.getElementById("mobile-contact");
+
+  if (desktopContact) desktopContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+  });
+
+  if (mobileContact) mobileContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+    closeMobileMenu();
+  });
+
+
+  /* ===============================
+     SHOW MORE REVIEWS
+  ================================ */
+  const showMoreBtn = document.getElementById("show-more-btn");
+  if (showMoreBtn) {
+    showMoreBtn.addEventListener("click", () => {
+      document.querySelectorAll(".hidden-review").forEach(el => {
+        el.style.display = "block";
+      });
+      showMoreBtn.style.display = "none";
+    });
+  }
+
+
+  /* ===============================
+     MOBILE MENU TOGGLE
+  ================================ */
+  const hamburger = document.getElementById("hamburger");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  function closeMobileMenu() {
+    if (!hamburger || !mobileMenu) return;
+    mobileMenu.classList.remove("open");
+    hamburger.classList.remove("active");
+    mobileMenu.setAttribute("aria-hidden", "true");
+    hamburger.setAttribute("aria-expanded", "false");
+  }
+
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener("click", () => {
+      const open = mobileMenu.classList.toggle("open");
+      hamburger.classList.toggle("active", open);
+      mobileMenu.setAttribute("aria-hidden", !open);
+      hamburger.setAttribute("aria-expanded", open);
+    });
+
+    // Close on ESC
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeMobileMenu();
+    });
+  }
+
 });
-  </script>
+</script>
 
     <!-- Footer Section -->
   <footer class="site-footer">
@@ -277,3 +283,4 @@ document.addEventListener('DOMContentLoaded', function () {
 </footer>
 </body>
 </html>
+
