@@ -138,7 +138,7 @@
 
     <div class="nav-right">
       <ul>
-        <li><a href="#" id="scroll-about">About Us</a></li>
+        <li><a href="/" id="scroll-about">About Us</a></li>
         <li><a href="#" id="contact-link">Contact Us</a></li>
         {% if session.get('user') %}
           <li><a href="/profile">👤</a></li>
@@ -156,7 +156,7 @@
       <li><a href="/">Home</a></li>
       <li><a href="/menu_select">Menu</a></li>
       <li><a href="/order_select">Order</a></li>
-      <li><a href="#" id="mobile-about">About Us</a></li>
+      <li><a href="/" id="mobile-about">About Us</a></li>
       <li><a href="#" id="mobile-contact">Contact Us</a></li>
       {% if session.get('user') %}
         <li><a href="/profile">👤 Profile</a></li>
@@ -240,46 +240,123 @@
 </footer>
 <script>
 document.addEventListener("DOMContentLoaded", function () {
+
+  /* ===============================
+     ANIMATE SECTIONS ON SCROLL
+  ================================ */
+  const animatedSections = document.querySelectorAll(
+    ".about-startup, .features, .fade-in-section"
+  );
+
+  const sectionObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add("animate-in", "is-visible");
+        sectionObserver.unobserve(entry.target); // animate once
+      }
+    });
+  }, { threshold: 0.25 });
+
+  animatedSections.forEach(sec => sectionObserver.observe(sec));
+
+
+  /* ===============================
+     ABOUT US SCROLL (DESKTOP + MOBILE)
+  ================================ */
+  function scrollToAbout() {
+    const about = document.querySelector(".about-startup");
+    if (about) {
+      about.scrollIntoView({ behavior: "smooth" });
+    }
+  }
+
+  const desktopAbout = document.getElementById("scroll-about");
+  const mobileAbout = document.getElementById("mobile-about");
+
+  if (desktopAbout) desktopAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
+  });
+
+  if (mobileAbout) mobileAbout.addEventListener("click", e => {
+    e.preventDefault();
+    scrollToAbout();
+    closeMobileMenu();
+  });
+
+
+  /* ===============================
+     CONTACT US (DESKTOP + MOBILE)
+  ================================ */
+  function contactUs() {
+    window.location.href = "mailto:wheyonwheels@gmail.com";
+  }
+
+  const desktopContact = document.getElementById("contact-link");
+  const mobileContact = document.getElementById("mobile-contact");
+
+  if (desktopContact) desktopContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+  });
+
+  if (mobileContact) mobileContact.addEventListener("click", e => {
+    e.preventDefault();
+    contactUs();
+    closeMobileMenu();
+  });
+
+
+  /* ===============================
+     SHOW MORE REVIEWS
+  ================================ */
+  const showMoreBtn = document.getElementById("show-more-btn");
+  if (showMoreBtn) {
+    showMoreBtn.addEventListener("click", () => {
+      document.querySelectorAll(".hidden-review").forEach(el => {
+        el.style.display = "block";
+      });
+      showMoreBtn.style.display = "none";
+    });
+  }
+
+
+  /* ===============================
+     MOBILE MENU TOGGLE
+  ================================ */
   const hamburger = document.getElementById("hamburger");
   const mobileMenu = document.getElementById("mobile-menu");
 
-  if (!hamburger || !mobileMenu) return;
+  function closeMobileMenu() {
+    if (!hamburger || !mobileMenu) return;
+    mobileMenu.classList.remove("open");
+    hamburger.classList.remove("active");
+    mobileMenu.setAttribute("aria-hidden", "true");
+    hamburger.setAttribute("aria-expanded", "false");
+  }
 
-  hamburger.addEventListener("click", function () {
-    const open = mobileMenu.classList.toggle("open");
-
-    // 🔥 This line enables the vertical / cross animation
-    hamburger.classList.toggle("active", open);
-
-    hamburger.setAttribute("aria-expanded", open);
-    mobileMenu.setAttribute("aria-hidden", !open);
-  });
-
-  // Close menu when a link is clicked
-  mobileMenu.querySelectorAll("a").forEach(link => {
-    link.addEventListener("click", () => {
-      mobileMenu.classList.remove("open");
-      hamburger.classList.remove("active"); // reset animation
-      hamburger.setAttribute("aria-expanded", "false");
-      mobileMenu.setAttribute("aria-hidden", "true");
+  if (hamburger && mobileMenu) {
+    hamburger.addEventListener("click", () => {
+      const open = mobileMenu.classList.toggle("open");
+      hamburger.classList.toggle("active", open);
+      mobileMenu.setAttribute("aria-hidden", !open);
+      hamburger.setAttribute("aria-expanded", open);
     });
-  });
 
-  // Close on Escape key
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      mobileMenu.classList.remove("open");
-      hamburger.classList.remove("active");
-      hamburger.setAttribute("aria-expanded", "false");
-      mobileMenu.setAttribute("aria-hidden", "true");
-    }
-  });
+    // Close on ESC
+    document.addEventListener("keydown", e => {
+      if (e.key === "Escape") closeMobileMenu();
+    });
+  }
+
 });
 </script>
 
 
+
 </body>
 </html>
+
 
 
 
