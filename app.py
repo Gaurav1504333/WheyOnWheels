@@ -2,23 +2,26 @@ from flask import Flask, render_template, request, redirect, url_for, session, f
 import pandas as pd
 import mysql.connector
 from datetime import datetime
-from flask import send_file
 import traceback
 import os
 
 app = Flask(__name__)
 app.secret_key = 'b1e2c3d4a5f67890123456789abcdef'
 
-@app.route('/sitemap.xml')
-def sitemap():
-    return send_file(
-        os.path.join(app.root_path, 'sitemap.xml'),
-        mimetype='application/xml'
-    )
 @app.route("/__ping")
 def ping():
     return "APP IS RUNNING"
 
+from flask import send_from_directory
+import os
+
+@app.route("/sitemap.xml", strict_slashes=False)
+def sitemap():
+    return send_from_directory(
+        app.root_path,
+        "sitemap.xml",
+        mimetype="application/xml"
+    )
 
 def get_db_connection():
     try:
@@ -1775,6 +1778,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
