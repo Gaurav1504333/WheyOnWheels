@@ -9,6 +9,17 @@ import os
 app = Flask(__name__)
 app.secret_key = 'b1e2c3d4a5f67890123456789abcdef'
 
+@app.route('/sitemap.xml')
+def sitemap():
+    return send_file(
+        os.path.join(app.root_path, 'sitemap.xml'),
+        mimetype='application/xml'
+    )
+@app.route("/__ping")
+def ping():
+    return "APP IS RUNNING"
+
+
 def get_db_connection():
     try:
         return mysql.connector.connect(
@@ -43,14 +54,6 @@ ICECREAM_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGMpB5
 @app.context_processor
 def inject_user():
     return dict(user=session.get('user'))
-
-
-@app.route('/sitemap.xml')
-def sitemap():
-    return send_file(
-        os.path.join(app.root_path, 'sitemap.xml'),
-        mimetype='application/xml'
-    )
 
 
 @app.route('/')
@@ -1772,6 +1775,7 @@ def submit_review():
 
 
 #E:\wow\python.exe e:\wow\app.py 
+
 
 
 
