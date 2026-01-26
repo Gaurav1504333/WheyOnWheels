@@ -3,16 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
   <title>WheyOnWheels</title>
+
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-  <link rel = "icon" href="{{ url_for('static', filename='logo.png') }}" type = "image/x-icon">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-  body {
-    overflow-x: hidden;
+  <link rel="icon" type="image/png" sizes="512x512" href="{{ url_for('static', filename='logo1.png') }}">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "WheyOnWheels",
+    "url": "https://www.wheyonwheels.in",
+    "logo": "https://www.wheyonwheels.in/static/logo1.png"
   }
-</style>
+  </script>
+
+  <style>
+    body { overflow-x: hidden; }
+  </style>
 </head>
+
 <body>
 <nav class="navbar">
   <!-- Mobile top bar: hamburger + logo + title -->
@@ -467,6 +478,7 @@ function scrollToAbout() {
 </body>
 
 </html>
+
 
 
 
