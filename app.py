@@ -229,7 +229,7 @@ def order_smoothie():
                 total_bill += addon_price
 
         if total_smoothies >= 2:
-            total_bill *= 0.9
+            total_bill *= 0.95
 
         total_bill = round(total_bill, 2)
 
@@ -238,7 +238,7 @@ def order_smoothie():
         # -------------------------------------------------
         reward_used = min(redeem_points, total_bill, user_rewards)
         total_after_rewards = round(total_bill - reward_used, 2)
-        reward_earned = int(round(total_after_rewards * 0.06))
+        reward_earned = int(round(total_after_rewards * 0.04))
 
         # -------------------------------------------------
         # Save pending order in session
@@ -370,7 +370,7 @@ def order_toast():
                 total_items += qty
 
         if total_items >= 2:
-            total_bill *= 0.9
+            total_bill *= 0.95
 
         total_bill = round(total_bill, 2)
 
@@ -379,7 +379,7 @@ def order_toast():
         # ---------------------------------
         reward_used = min(redeem_points, total_bill, user_rewards)
         total_after_rewards = round(total_bill - reward_used, 2)
-        reward_earned = int(round(total_after_rewards * 0.06))
+        reward_earned = int(round(total_after_rewards * 0.04))
 
         # ---------------------------------
         # Save pending order
@@ -522,7 +522,7 @@ def order_workout():
         # Quantity discount
         discount_applied = False
         if total_items >= 2:
-            total_bill *= 0.90
+            total_bill *= 0.95
             discount_applied = True
 
         total_bill = round(total_bill, 2)
@@ -532,7 +532,7 @@ def order_workout():
         # -------------------------------------------------
         reward_used = min(redeem_points, user_rewards, total_bill)
         total_after_rewards = round(total_bill - reward_used, 2)
-        reward_earned = int(round(total_after_rewards * 0.06))
+        reward_earned = int(round(total_after_rewards * 0.04))
 
         # -------------------------------------------------
         # Save to session
@@ -801,14 +801,14 @@ def order_icecream():
                 total_items += qty
 
         if total_items >= 2:
-            total_bill *= 0.90
+            total_bill *= 0.95
 
         total_bill = round(total_bill, 2)
 
         # Reward logic
         reward_used = min(redeem_points, user_rewards, total_bill)
         total_after_rewards = round(total_bill - reward_used, 2)
-        reward_earned = int(round(total_after_rewards * 0.06))
+        reward_earned = int(round(total_after_rewards * 0.04))
 
         session['pending_order'] = {
             'type': 'normal',
