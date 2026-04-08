@@ -151,8 +151,8 @@ def order_smoothie():
     try:
         df = pd.read_csv(Smoothie_MENU_CSV_URL)
         df.fillna('', inplace=True)
-        smoothies = df.iloc[0:24, 1].dropna().tolist()
-        addons = df.iloc[24:32, 1].dropna().tolist()
+        smoothies = df.iloc[0:21, 1].dropna().tolist()
+        addons = df.iloc[21:29, 1].dropna().tolist()
         prices = df.set_index(df.columns[1])[df.columns[4]].to_dict()
     except Exception as e:
         print("❌ Dropdown load error:", e)
