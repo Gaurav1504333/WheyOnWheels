@@ -198,11 +198,19 @@
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
 
+    <div style="margin-top: 15px;">
+  <label for="referral_code" class="choose">Enter Referral Code:</label>
+  <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
+        style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+  <small id="referralMsg" style="color: green; display: none;">Referral code applied!</small>
+  <small id="referralError" style="color: red; display: none;">Invalid referral code</small>
+</div>
+
     <div style="margin: 20px 0; font-weight: bold; font-size: 1em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
-    <div id="discountNote">🎉 10% discount applied (2 or more toasts)</div>
+    <div id="discountNote">10% discount applied (2 or more toasts)</div>
 
     <button type="submit" style="color:#000000;">Place Order</button>
   </form>
@@ -212,155 +220,224 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-const prices = {{ prices | tojson }};
-const toasts = {{ toasts | tojson }};
-let discountTriggered = false;
+  const prices = {{ prices | tojson }};
+  const toasts = {{ toasts | tojson }};
 
-function normalize(str) {
-  return str.trim().toLowerCase();
-}
+  let validReferralCodes = [];
+  let discountTriggered = false;
 
-function launchConfetti() {
-  const duration = 2000;
-  const end = Date.now() + duration;
+  function normalize(str) { return (str || '').toString().trim().toLowerCase(); }
 
-  (function frame() {
-    confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 } });
-    confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 } });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
-
-function calculateTotal() {
-  let total = 0;
-  let totalItems = 0;
-
-  document.querySelectorAll(".toast-group").forEach(group => {
-    const toastSelect = group.querySelector("select.toast");
-    const qtyInput = group.querySelector("input[name='quantity[]']");
-    const toast = toastSelect.value;
-    const qty = parseInt(qtyInput.value) || 1;
-
-    const key = Object.keys(prices).find(k => normalize(k) === normalize(toast));
-    if (toast && key) {
-      total += parseFloat(prices[key]) * qty;
-      totalItems += qty;
-    }
-  });
-
-  const discountNote = document.getElementById("discountNote");
-
-  if (totalItems >= 2) {
-    total *= 0.9;
-    discountNote.style.display = "block";
-
-    if (!discountTriggered) {
-      launchConfetti();
-      discountTriggered = true;
-    }
-  } else {
-    discountNote.style.display = "none";
-    discountTriggered = false;
+  // -----------------------------
+  // Confetti
+  // -----------------------------
+  function launchConfetti() {
+    const duration = 2000;
+    const end = Date.now() + duration;
+    (function frame() {
+      confetti({ particleCount: 4, angle: 60, spread: 55, origin: { x: 0 } });
+      confetti({ particleCount: 4, angle: 120, spread: 55, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
   }
 
-  const toggle = document.getElementById("redeem_toggle");
-  const hidden = document.getElementById("redeem_points");
+  // -----------------------------
+  // Calculate Total
+  // -----------------------------
+  function calculateTotal() {
+    let total = 0;
+    let totalItems = 0;
 
-  if (toggle.checked) {
-    const maxRedeem = parseInt(hidden.dataset.max) || 0;
-    hidden.value = maxRedeem;
-    total -= maxRedeem;
-  } else {
-    hidden.value = 0;
+    document.querySelectorAll(".toast-group").forEach(group => {
+      const toastSelect = group.querySelector("select.toast");
+      const qtyInput = group.querySelector("input[name='quantity[]']");
+      const toast = toastSelect.value;
+      const qty = parseInt(qtyInput.value) || 1;
+
+      const key = Object.keys(prices).find(k => normalize(k) === normalize(toast));
+      if (toast && key) {
+        total += parseFloat(prices[key]) * qty;
+        totalItems += qty;
+      }
+    });
+
+    // Multi-item discount (5%)
+    const discountNote = document.getElementById("discountNote");
+    if (totalItems >= 2) {
+      total *= 0.95;
+      if (discountNote) discountNote.style.display = "block";
+      if (!discountTriggered) {
+        launchConfetti();
+        discountTriggered = true;
+      }
+    } else {
+      if (discountNote) discountNote.style.display = "none";
+      discountTriggered = false;
+    }
+
+    // Referral discount (10%)
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      const code = referralInput.value.trim().toLowerCase();
+      if (validReferralCodes.length && validReferralCodes.includes(code)) {
+        total *= 0.90;
+      }
+    }
+
+    // Redeem rewards
+    const toggle = document.getElementById("redeem_toggle");
+    const hidden = document.getElementById("redeem_points");
+    if (toggle?.checked) {
+      const maxRedeem = parseInt(hidden.dataset.max) || 0;
+      hidden.value = maxRedeem;
+      total -= maxRedeem;
+    } else if (hidden) {
+      hidden.value = 0;
+    }
+
+    if (total < 0) total = 0;
+    document.getElementById("totalPrice").textContent = total.toFixed(2);
   }
 
-  if (total < 0) total = 0;
-  document.getElementById("totalPrice").textContent = total.toFixed(2);
-}
+  // -----------------------------
+  // Add / Remove Toast
+  // -----------------------------
+  function addToast() {
+    const container = document.getElementById("toastContainer");
+    const newGroup = document.createElement("div");
+    newGroup.className = "toast-group";
 
-function addToast() {
-  const container = document.getElementById("toastContainer");
-  const newGroup = document.createElement("div");
-  newGroup.className = "toast-group";
+    const toastOptions = toasts
+      .map(item => `<option value="${item}">${item}</option>`)
+      .join("");
 
-  const toastOptions = toasts
-    .map(item => `<option value="${item}">${item}</option>`)
-    .join("");
+    newGroup.innerHTML = `
+      <label>Choose a Toast and Quantity:</label>
+      <select name="toast[]" class="toast">
+        <option value="">None</option>
+        ${toastOptions}
+      </select>
+      <input type="number" name="quantity[]" min="1" value="1">
+      <button type="button" class="remove-btn" onclick="removeToast(this)">➖</button>
+    `;
 
-  newGroup.innerHTML = `
-    <label>Choose a Toast and Quantity:</label>
+    container.appendChild(newGroup);
 
-    <select name="toast[]" class="toast">
-      <option value="">None</option>
-      ${toastOptions}
-    </select>
+    newGroup.querySelectorAll("select, input").forEach(el => {
+      el.addEventListener("change", calculateTotal);
+      el.addEventListener("input", calculateTotal);
+    });
 
-    <input type="number" name="quantity[]" min="1" value="1">
-
-    <button type="button" class="remove-btn" onclick="removeToast(this)">➖</button>
-  `;
-
-  container.appendChild(newGroup);
-
-  newGroup.querySelectorAll("select, input").forEach(el => {
-    el.addEventListener("change", calculateTotal);
-    el.addEventListener("input", calculateTotal);
-  });
-
-  calculateTotal();
-}
-
-function removeToast(button) {
-  const group = button.closest(".toast-group");
-  if (group) {
-    group.remove();
     calculateTotal();
   }
-}
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.querySelectorAll("select, input").forEach(el => {
-    el.addEventListener("change", calculateTotal);
-    el.addEventListener("input", calculateTotal);
-  });
-
-  document.getElementById("redeem_toggle").addEventListener("change", calculateTotal);
-  calculateTotal();
-});
-</script>
-
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  const hamburger = document.getElementById("hamburger");
-  const mobileMenu = document.getElementById("mobile-menu");
-
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener("click", function () {
-    const open = mobileMenu.classList.toggle("open");
-    hamburger.classList.toggle("active", open);
-    mobileMenu.setAttribute("aria-hidden", !open);
-    hamburger.setAttribute("aria-expanded", open);
-  });
-
-  mobileMenu.querySelectorAll("a").forEach(a => {
-    a.addEventListener("click", () => {
-      mobileMenu.classList.remove("open");
-      hamburger.classList.remove("active");
-      mobileMenu.setAttribute("aria-hidden", "true");
-      hamburger.setAttribute("aria-expanded", "false");
-    });
-  });
-
-  document.addEventListener("keydown", e => {
-    if (e.key === "Escape") {
-      mobileMenu.classList.remove("open");
-      hamburger.classList.remove("active");
-      mobileMenu.setAttribute("aria-hidden", "true");
-      hamburger.setAttribute("aria-expanded", "false");
+  function removeToast(button) {
+    const group = button.closest(".toast-group");
+    if (group) {
+      group.remove();
+      calculateTotal();
     }
+  }
+
+  // -----------------------------
+  // Referral Codes
+  // -----------------------------
+  async function loadReferralCodes() {
+    try {
+      const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSMJKLe-A2NZASP1sl1dNKRdK5Ne-3h-4Cy3bI4I0N_Ikh-j5Tk1bLFqO9DXgO88u3i87REtZJDZWEk/pub?output=csv");
+      const data = await res.text();
+      validReferralCodes = data
+        .split("\n")
+        .map(row => row.split(",")[0].trim().toLowerCase())
+        .filter(code => code.length > 0);
+      calculateTotal();
+    } catch (err) {
+      console.error("Referral load error:", err);
+    }
+  }
+
+  function validateReferral() {
+    const input = document.getElementById("referral_code");
+    const msg = document.getElementById("referralMsg");
+    const err = document.getElementById("referralError");
+
+    if (!input) return;
+
+    const code = input.value.trim().toLowerCase();
+
+    if (!code) {
+      msg.style.display = "none";
+      err.style.display = "none";
+      return;
+    }
+
+    if (validReferralCodes.length && validReferralCodes.includes(code)) {
+      msg.style.display = "block";
+      err.style.display = "none";
+    } else {
+      msg.style.display = "none";
+      err.style.display = "block";
+    }
+  }
+
+  // -----------------------------
+  // Init
+  // -----------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    // Hamburger menu
+    const hamburger = document.getElementById("hamburger");
+    const mobileMenu = document.getElementById("mobile-menu");
+
+    if (hamburger && mobileMenu) {
+      hamburger.addEventListener("click", function () {
+        const open = mobileMenu.classList.toggle("open");
+        hamburger.classList.toggle("active", open);
+        mobileMenu.setAttribute("aria-hidden", !open);
+        hamburger.setAttribute("aria-expanded", open);
+      });
+
+      mobileMenu.querySelectorAll("a").forEach(a => {
+        a.addEventListener("click", () => {
+          mobileMenu.classList.remove("open");
+          hamburger.classList.remove("active");
+          mobileMenu.setAttribute("aria-hidden", "true");
+          hamburger.setAttribute("aria-expanded", "false");
+        });
+      });
+
+      document.addEventListener("keydown", e => {
+        if (e.key === "Escape") {
+          mobileMenu.classList.remove("open");
+          hamburger.classList.remove("active");
+          mobileMenu.setAttribute("aria-hidden", "true");
+          hamburger.setAttribute("aria-expanded", "false");
+        }
+      });
+    }
+
+    // Referral input listener
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      referralInput.addEventListener("input", () => {
+        validateReferral();
+        calculateTotal();
+      });
+    }
+
+    // Redeem toggle listener
+    const redeemToggle = document.getElementById("redeem_toggle");
+    if (redeemToggle) redeemToggle.addEventListener("change", calculateTotal);
+
+    // Initial select/input listeners
+    document.querySelectorAll("select, input").forEach(el => {
+      el.addEventListener("change", calculateTotal);
+      el.addEventListener("input", calculateTotal);
+    });
+
+    // Load referral codes & initial total
+    loadReferralCodes();
+    calculateTotal();
   });
-});
 </script>
 
 <footer class="site-footer">
@@ -389,13 +466,3 @@ document.addEventListener("DOMContentLoaded", function () {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
