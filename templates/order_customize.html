@@ -205,7 +205,7 @@ button[type="submit"]:hover {
 </nav>
 
 <div class="customize-container">
-  <h1>Customize Your Smoothie</h1>
+  <h1>Customize Your Smoothie/Shake</h1>
 
   <form action="/order_customize" method="POST" id="customize-form">
     <div class="dropdown-row">
@@ -229,6 +229,64 @@ button[type="submit"]:hover {
       </div>
       {% endfor %}
     </div>
+
+        <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
+    <div style="margin-top: 15px;">
+<div style="
+  margin: 24px auto;
+  max-width: 420px;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 14px;
+  padding: 18px 20px;
+  text-align: center;
+">
+  <label for="referral_code" style="
+    display: block;
+    font-family: 'Adieu', sans-serif;
+    font-size: 14px;
+    color: #fefefe;
+    margin-bottom: 10px;
+    letter-spacing: 0.5px;
+  ">Enter Referral Code:</label>
+
+  <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
+    style="
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 77, 166, 0.4);
+      background: rgba(255,255,255,0.07);
+      color: #ffffff;
+      font-family: 'Adieu', sans-serif;
+      font-size: 13px;
+      outline: none;
+      box-sizing: border-box;
+      transition: border 0.2s ease;
+    "
+    onfocus="this.style.border='1px solid #fe6995'"
+    onblur="this.style.border='1px solid #fe699566'"
+  >
+
+  <small id="referralMsg" style="
+    display: none;
+    color: #4cff91;
+    font-family: 'Adieu', sans-serif;
+    font-size: 11px;
+    margin-top: 6px;
+    display: none;
+  ">Referral code applied!</small>
+
+  <small id="referralError" style="
+    display: none;
+    color: #ff4d4d;
+    font-family: 'Adieu', sans-serif;
+    font-size: 11px;
+    margin-top: 6px;
+    display: none;
+  ">Invalid referral code</small>
+</div>
+
 
     <div class="price-display">Total: ₹<span id="total">0</span></div>
     <input type="hidden" name="total_price" id="total_price">
@@ -264,6 +322,89 @@ button[type="submit"]:hover {
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
+  let validReferralCodes = [];
+
+  // -----------------------------
+  // Referral Codes
+  // -----------------------------
+  async function loadReferralCodes() {
+    try {
+      const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSMJKLe-A2NZASP1sl1dNKRdK5Ne-3h-4Cy3bI4I0N_Ikh-j5Tk1bLFqO9DXgO88u3i87REtZJDZWEk/pub?output=csv");
+      const data = await res.text();
+      validReferralCodes = data
+        .split("\n")
+        .map(row => row.split(",")[0].trim().toLowerCase())
+        .filter(code => code.length > 0);
+      updatePriceAndMacros(); // recalc after loading
+    } catch (err) {
+      console.error("Referral load error:", err);
+    }
+  }
+
+  function validateReferral() {
+    const input = document.getElementById("referral_code");
+    const msg = document.getElementById("referralMsg");
+    const err = document.getElementById("referralError");
+
+    if (!input) return;
+
+    const code = input.value.trim().toLowerCase();
+
+    if (!code) {
+      msg.style.display = "none";
+      err.style.display = "none";
+      return;
+    }
+
+    if (validReferralCodes.length && validReferralCodes.includes(code)) {
+      msg.style.display = "block";
+      err.style.display = "none";
+    } else {
+      msg.style.display = "none";
+      err.style.display = "block";
+    }
+  }
+
+  // -----------------------------
+  // Price + Macros Calculation
+  // -----------------------------
+  function updatePriceAndMacros() {
+    const selects = document.querySelectorAll("select");
+    const totalEl = document.getElementById("total");
+    const totalInput = document.getElementById("total_price");
+
+    let total = 0;
+
+    selects.forEach(sel => {
+      const opt = sel.options[sel.selectedIndex];
+      const macrosDiv = document.getElementById(sel.id + "-macros");
+
+      if (opt && opt.dataset.price) {
+        total += parseFloat(opt.dataset.price);
+
+        if (macrosDiv) {
+          macrosDiv.textContent =
+            `Calories: ${opt.dataset.cal || 0} | Protein: ${opt.dataset.protein || 0}g | ` +
+            `Carbs: ${opt.dataset.carbs || 0}g | Fat: ${opt.dataset.fat || 0}g`;
+        }
+      } else if (macrosDiv) {
+        macrosDiv.textContent = "Calories: 0 | Protein: 0g | Carbs: 0g | Fat: 0g";
+      }
+    });
+
+    // Referral discount (10%)
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      const code = referralInput.value.trim().toLowerCase();
+      if (validReferralCodes.length && validReferralCodes.includes(code)) {
+        total *= 0.90;
+      }
+    }
+
+    if (totalEl) totalEl.textContent = total.toFixed(2);
+    if (totalInput) totalInput.value = total.toFixed(2);
+  }
+
 document.addEventListener("DOMContentLoaded", function () {
 
   /* ===============================
@@ -297,15 +438,13 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
-
   /* ===============================
-     ABOUT US SCROLL (OFFSET FIXED)
+     ABOUT US SCROLL
   ================================ */
   function scrollToAbout() {
     const about = document.querySelector(".about-startup");
     if (!about) return;
-
-    const yOffset = -200; // 👈 adjust if needed
+    const yOffset = -200;
     const y = about.getBoundingClientRect().top + window.pageYOffset + yOffset;
     window.scrollTo({ top: y, behavior: "smooth" });
   }
@@ -323,7 +462,6 @@ document.addEventListener("DOMContentLoaded", function () {
     scrollToAbout();
     closeMobileMenu();
   });
-
 
   /* ===============================
      CONTACT US
@@ -346,7 +484,6 @@ document.addEventListener("DOMContentLoaded", function () {
     closeMobileMenu();
   });
 
-
   /* ===============================
      SCROLL ANIMATIONS
   ================================ */
@@ -365,7 +502,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
   animatedSections.forEach(sec => observer.observe(sec));
 
-
   /* ===============================
      SHOW MORE REVIEWS
   ================================ */
@@ -379,40 +515,23 @@ document.addEventListener("DOMContentLoaded", function () {
     });
   }
 
+  /* ===============================
+     SELECT LISTENERS
+  ================================ */
+  document.querySelectorAll("select").forEach(sel => {
+    sel.addEventListener("change", updatePriceAndMacros);
+  });
 
   /* ===============================
-     PRICE + MACROS CALCULATION
+     REFERRAL INPUT LISTENER
   ================================ */
-  const selects = document.querySelectorAll("select");
-  const totalEl = document.getElementById("total");
-  const totalInput = document.getElementById("total_price");
-
-  function updatePriceAndMacros() {
-    let total = 0;
-
-    selects.forEach(sel => {
-      const opt = sel.options[sel.selectedIndex];
-      const macrosDiv = document.getElementById(sel.id + "-macros");
-
-      if (opt && opt.dataset.price) {
-        const price = parseFloat(opt.dataset.price);
-        total += price;
-
-        macrosDiv.textContent =
-          `Calories: ${opt.dataset.cal || 0} | Protein: ${opt.dataset.protein || 0}g | ` +
-          `Carbs: ${opt.dataset.carbs || 0}g | Fat: ${opt.dataset.fat || 0}g`;
-      } else if (macrosDiv) {
-        macrosDiv.textContent =
-          "Calories: 0 | Protein: 0g | Carbs: 0g | Fat: 0g";
-      }
+  const referralInput = document.getElementById("referral_code");
+  if (referralInput) {
+    referralInput.addEventListener("input", () => {
+      validateReferral();
+      updatePriceAndMacros();
     });
-
-    if (totalEl) totalEl.textContent = total.toFixed(2);
-    if (totalInput) totalInput.value = total.toFixed(2);
   }
-
-  selects.forEach(sel => sel.addEventListener("change", updatePriceAndMacros));
-
 
   /* ===============================
      CONFETTI ON SUBMIT
@@ -428,6 +547,12 @@ document.addEventListener("DOMContentLoaded", function () {
       })();
     });
   }
+
+  /* ===============================
+     INIT
+  ================================ */
+  loadReferralCodes();
+  updatePriceAndMacros();
 
 });
 </script>
