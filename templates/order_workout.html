@@ -201,13 +201,20 @@
     
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
+    <div style="margin-top: 15px;">
+  <label for="referral_code" class="choose">Enter Referral Code:</label>
+  <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
+        style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+  <small id="referralMsg" style="color: green; display: none;">Referral code applied!</small>
+  <small id="referralError" style="color: red; display: none;">Invalid referral code</small>
+</div>
 
     <div style="margin: 20px 0; font-weight: bold; font-size: 1em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
     <div id="discountNote" style="display:none; color: green; margin-top: -10px;">
-      🎉 10% discount applied (2 or more items)
+      10% discount applied (2 or more items)
     </div>
 
     <button type="submit" style="color:#000000;">Place Order</button>
@@ -215,257 +222,296 @@
 </div>
 <div class="div"></div>
 
-<!-- Confetti JS -->
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const elements = document.querySelectorAll(".about-startup, .features");
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      entry.target.classList.toggle("animate-in", entry.isIntersecting);
+  /* Data */
+  const prices = {{ prices | tojson }};
+  const workouts = {{ workouts | tojson }};
+  const addons = {{ addons | tojson }};
+  const combos = {{ combos | tojson }};
+
+  let validReferralCodes = [];
+  let discountTriggered = false;
+
+  /* Normalize helper */
+  function normalize(s) { return (s || '').toString().trim().toLowerCase(); }
+
+  /* Confetti */
+  function launchConfetti() {
+    const duration = 3000;
+    const end = Date.now() + duration;
+    (function frame() {
+      confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+      confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+  }
+
+  /* Update addon state based on smoothie selection */
+  function updateAddonState(group) {
+    const smoothieSel = group.querySelector("select.smoothie");
+    const addonSelects = group.querySelectorAll("select.addon");
+    if (!smoothieSel) return;
+    addonSelects.forEach((addonSel) => {
+      if (!smoothieSel.value) {
+        addonSel.value = "";
+        addonSel.disabled = true;
+        addonSel.style.opacity = "0.5";
+      } else {
+        addonSel.disabled = false;
+        addonSel.style.opacity = "1";
+      }
     });
-  }, { threshold: 0.3 });
-  elements.forEach((el) => observer.observe(el));
-});
+  }
 
-function updateAddonState(group) {
-  const smoothieSel = group.querySelector("select.smoothie");
-  const addonSelects = group.querySelectorAll("select.addon");
-  if (!smoothieSel) return;
-  addonSelects.forEach((addonSel) => {
-    if (!smoothieSel.value) {
-      addonSel.value = "";
-      addonSel.disabled = true;
-      addonSel.style.opacity = "0.5";
+  /* Remove workout row */
+  function removeWorkout(btn) {
+    btn.parentElement.remove();
+    calculateTotal();
+  }
+
+  /* Add another workout row */
+  function addWorkout() {
+    const container = document.getElementById("workoutContainer");
+    const row = document.createElement("div");
+    row.className = "workout-group";
+
+    row.innerHTML = `
+      <label>Choose a Workout Drink and Quantity:</label>
+      <select name="workout[]" class="workout">
+        <option value="">None</option>
+        ${workouts.map(w => `<option value="${w}">${w}</option>`).join('')}
+      </select>
+      <input type="number" name="quantity[]" min="1" value="1">
+      <select name="addon[]" class="addon">
+        <option value="">No Addon</option>
+        ${addons.map(a => `<option value="${a}">${a}</option>`).join('')}
+      </select>
+      <button type="button" class="remove-btn" onclick="removeWorkout(this)">➖</button>
+    `;
+
+    container.appendChild(row);
+
+    row.querySelectorAll("select, input").forEach(el => {
+      el.addEventListener("change", calculateTotal);
+      el.addEventListener("input", calculateTotal);
+    });
+
+    calculateTotal();
+  }
+
+  /* Total Calculator */
+  function calculateTotal() {
+    let total = 0;
+    let totalItems = 0;
+
+    document.querySelectorAll(".workout-group").forEach(group => {
+      const workout = group.querySelector("select.workout")?.value;
+      const qty = parseInt(group.querySelector("input")?.value) || 1;
+      const addon = group.querySelector("select.addon")?.value;
+
+      const wk = workout ? Object.keys(prices).find(k => normalize(k) === normalize(workout)) : null;
+      if (wk) {
+        total += parseFloat(prices[wk]) * qty;
+        totalItems += qty;
+      }
+
+      const ak = addon ? Object.keys(prices).find(k => normalize(k) === normalize(addon)) : null;
+      if (ak) {
+        total += parseFloat(prices[ak]) * qty;
+      }
+    });
+
+    const combo = document.getElementById("combo")?.value;
+    const comboQty = parseInt(document.getElementById("combo_quantity")?.value) || 1;
+    const comboAddon = document.getElementById("combo_addon")?.value;
+
+    const ck = combo ? Object.keys(prices).find(k => normalize(k) === normalize(combo)) : null;
+    if (ck) {
+      total += parseFloat(prices[ck]) * comboQty;
+      totalItems += comboQty;
+    }
+
+    const cak = comboAddon ? Object.keys(prices).find(k => normalize(k) === normalize(comboAddon)) : null;
+    if (cak) {
+      total += parseFloat(prices[cak]) * comboQty;
+    }
+
+    // Multi-item discount (5%)
+    const discountNote = document.getElementById("discountNote");
+    if (totalItems >= 2) {
+      total *= 0.95;
+      if (discountNote) discountNote.style.display = "block";
+      if (!discountTriggered) {
+        launchConfetti();
+        discountTriggered = true;
+      }
     } else {
-      addonSel.disabled = false;
-      addonSel.style.opacity = "1";
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const url = new URL(window.location.href);
-  if (url.searchParams.get("smoothie")) {
-    document.querySelector(".form-container").scrollIntoView({ behavior: "smooth" });
-  }
-});
-
-function launchConfetti() {
-  const duration = 3000;
-  const end = Date.now() + duration;
-  (function frame() {
-    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
-    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
-</script>
-
-
-<script>
-/* Data */
-const prices = {{ prices | tojson }};
-const workouts = {{ workouts | tojson }};
-const addons = {{ addons | tojson }};
-const combos = {{ combos | tojson }};
-
-/* Normalize helper */
-function normalize(s){ return (s||'').toString().trim().toLowerCase(); }
-
-/* REMOVE WORKOUT ROW */
-function removeWorkout(btn){
-  btn.parentElement.remove();
-  calculateTotal();
-}
-
-/* Add another workout row */
-function addWorkout(){
-  const container = document.getElementById("workoutContainer");
-  const row = document.createElement("div");
-  row.className = "workout-group";
-
-  row.innerHTML = `
-    <label>Choose a Workout Drink and Quantity:</label>
-    <select name="workout[]" class="workout">
-      <option value="">None</option>
-      ${workouts.map(w => `<option value="${w}">${w}</option>`).join('')}
-    </select>
-    <input type="number" name="quantity[]" min="1" value="1">
-    <select name="addon[]" class="addon">
-      <option value="">No Addon</option>
-      ${addons.map(a => `<option value="${a}">${a}</option>`).join('')}
-    </select>
-    <button type="button" class="remove-btn" onclick="removeWorkout(this)">➖</button>
-  `;
-
-  container.appendChild(row);
-
-  row.querySelectorAll("select,input").forEach(el=>{
-    el.addEventListener("change", calculateTotal);
-    el.addEventListener("input", calculateTotal);
-  });
-
-  calculateTotal();
-}
-
-/* Total Calculator */
-function calculateTotal(){
-  let total = 0;
-  let totalItems = 0;
-
-  document.querySelectorAll(".workout-group").forEach(group=>{
-    const workout = group.querySelector("select.workout")?.value;
-    const qty = parseInt(group.querySelector("input")?.value) || 1;
-    const addon = group.querySelector("select.addon")?.value;
-
-    const wk = workout ? Object.keys(prices).find(k => normalize(k) === normalize(workout)) : null;
-    if(wk){
-      total += parseFloat(prices[wk]) * qty;
-      totalItems += qty;
+      if (discountNote) discountNote.style.display = "none";
+      discountTriggered = false;
     }
 
-    const ak = addon ? Object.keys(prices).find(k => normalize(k) === normalize(addon)) : null;
-    if(ak){
-      total += parseFloat(prices[ak]) * qty;
+    // Referral discount (10%)
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      const code = referralInput.value.trim().toLowerCase();
+      if (validReferralCodes.length && validReferralCodes.includes(code)) {
+        total *= 0.90;
+      }
     }
-  });
 
-  const combo = document.getElementById("combo")?.value;
-  const comboQty = parseInt(document.getElementById("combo_quantity")?.value) || 1;
-  const comboAddon = document.getElementById("combo_addon")?.value;
+    // Redeem rewards
+    const redeemToggle = document.getElementById("redeem_toggle");
+    const redeemInput = document.getElementById("redeem_points");
+    if (redeemToggle?.checked) {
+      const max = parseInt(redeemInput.dataset.max) || 0;
+      redeemInput.value = max;
+      total -= max;
+    } else if (redeemInput) {
+      redeemInput.value = 0;
+    }
 
-  const ck = combo ? Object.keys(prices).find(k => normalize(k) === normalize(combo)) : null;
-  if(ck){
-    total += parseFloat(prices[ck]) * comboQty;
-    totalItems += comboQty;
+    if (total < 0) total = 0;
+    document.getElementById("totalPrice").textContent = total.toFixed(2);
   }
 
-  const cak = comboAddon ? Object.keys(prices).find(k => normalize(k) === normalize(comboAddon)) : null;
-  if(cak){
-    total += parseFloat(prices[cak]) * comboQty;
+  // -----------------------------
+  // Referral Codes
+  // -----------------------------
+  async function loadReferralCodes() {
+    try {
+      const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSMJKLe-A2NZASP1sl1dNKRdK5Ne-3h-4Cy3bI4I0N_Ikh-j5Tk1bLFqO9DXgO88u3i87REtZJDZWEk/pub?output=csv");
+      const data = await res.text();
+      validReferralCodes = data
+        .split("\n")
+        .map(row => row.split(",")[0].trim().toLowerCase())
+        .filter(code => code.length > 0);
+      calculateTotal();
+    } catch (err) {
+      console.error("Referral load error:", err);
+    }
   }
 
-  if(totalItems >= 2){
-    total *= 0.90;
-    document.getElementById("discountNote").style.display = "block";
-  } else {
-    document.getElementById("discountNote").style.display = "none";
+  function validateReferral() {
+    const input = document.getElementById("referral_code");
+    const msg = document.getElementById("referralMsg");
+    const err = document.getElementById("referralError");
+
+    if (!input) return;
+
+    const code = input.value.trim().toLowerCase();
+
+    if (!code) {
+      msg.style.display = "none";
+      err.style.display = "none";
+      return;
+    }
+
+    if (validReferralCodes.length && validReferralCodes.includes(code)) {
+      msg.style.display = "block";
+      err.style.display = "none";
+    } else {
+      msg.style.display = "none";
+      err.style.display = "block";
+    }
   }
 
-  const redeemToggle = document.getElementById("redeem_toggle");
-  const redeemInput = document.getElementById("redeem_points");
-
-  if(redeemToggle?.checked){
-    const max = parseInt(redeemInput.dataset.max) || 0;
-    redeemInput.value = max;
-    total -= max;
-  } else {
-    redeemInput.value = 0;
-  }
-
-  if(total < 0) total = 0;
-  document.getElementById("totalPrice").textContent = total.toFixed(2);
-}
-
-document.addEventListener("DOMContentLoaded", ()=>{
-  document.querySelectorAll("select,input").forEach(el=>{
-    el.addEventListener("change", calculateTotal);
-    el.addEventListener("input", calculateTotal);
-  });
-  calculateTotal();
-});
-</script>
-<script>
-  // Animate on scroll
-  document.addEventListener("DOMContentLoaded", function () {
+  // -----------------------------
+  // Init
+  // -----------------------------
+  document.addEventListener("DOMContentLoaded", () => {
+    // Animate on scroll
     const elements = document.querySelectorAll(".about-startup, .features");
-
     const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-in");
-        } else {
-          entry.target.classList.remove("animate-in");
+      entries.forEach(entry => {
+        entry.target.classList.toggle("animate-in", entry.isIntersecting);
+      });
+    }, { threshold: 0.3 });
+    elements.forEach(el => observer.observe(el));
+
+    // Scroll to form if smoothie param in URL
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("smoothie")) {
+      document.querySelector(".form-container")?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // About scroll
+    document.getElementById("scroll-about")?.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 750, behavior: 'smooth' });
+    });
+
+    // Contact link
+    document.getElementById("contact-link")?.addEventListener("click", function (e) {
+      e.preventDefault();
+      alert("You can reach us at: wheyonwheels@gmail.com");
+      window.location.href = "mailto:wheyonwheels@gmail.com";
+    });
+
+    // Show more reviews button
+    const btn = document.getElementById("show-more-btn");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".hidden-review").forEach(el => el.style.display = "block");
+        btn.style.display = "none";
+      });
+    }
+
+    // Hamburger menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (hamburger && mobileMenu) {
+      hamburger.addEventListener('click', function () {
+        const open = mobileMenu.classList.toggle('open');
+        hamburger.classList.toggle('active', open);
+        mobileMenu.setAttribute('aria-hidden', !open);
+        hamburger.setAttribute('aria-expanded', open);
+      });
+
+      mobileMenu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
+          mobileMenu.classList.remove('open');
+          hamburger.classList.remove('active');
+          mobileMenu.setAttribute('aria-hidden', 'true');
+          hamburger.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          mobileMenu.classList.remove('open');
+          hamburger.classList.remove('active');
+          mobileMenu.setAttribute('aria-hidden', 'true');
+          hamburger.setAttribute('aria-expanded', 'false');
         }
       });
-    }, {
-      threshold: 0.3
-    });
+    }
 
-    elements.forEach(el => observer.observe(el));
-  });
-
-  // Smooth scroll to About section
-  document.getElementById("scroll-about").addEventListener("click", function (e) {
-    e.preventDefault();
-    window.scrollTo({ top: 750, behavior: 'smooth' });
-  });
-
-  // Contact email popup
-  document.addEventListener("DOMContentLoaded", function () {
-    const contactLink = document.getElementById("contact-link");
-    if (contactLink) {
-      contactLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        alert("You can reach us at: wheyonwheels@gmail.com");
-        window.location.href = "mailto:wheyonwheels@gmail.com";
+    // Referral input listener
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      referralInput.addEventListener("input", () => {
+        validateReferral();
+        calculateTotal();
       });
     }
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("show-more-btn");
-  if (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".hidden-review").forEach(el => {
-        el.style.display = "block";
-      });
-      btn.style.display = "none"; // hide button after showing all
+
+    // Redeem toggle listener
+    const redeemToggle = document.getElementById("redeem_toggle");
+    if (redeemToggle) redeemToggle.addEventListener("change", calculateTotal);
+
+    // Initial select/input listeners
+    document.querySelectorAll("select, input").forEach(el => {
+      el.addEventListener("change", calculateTotal);
+      el.addEventListener("input", calculateTotal);
     });
-  }
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
 
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
+    // Load referral codes & initial total
+    loadReferralCodes();
+    calculateTotal();
   });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-  });
-});
-
 </script>
 
 
@@ -495,11 +541,3 @@ document.addEventListener('DOMContentLoaded', function () {
 
 </body>
 </html>
-
-
-
-
-
-
-
-
