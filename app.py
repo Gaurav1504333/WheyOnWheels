@@ -38,7 +38,6 @@ def get_db_connection():
         return None
 
 
-
 @app.route("/db-test")
 def db_test():
     conn = get_db_connection()
@@ -48,15 +47,33 @@ def db_test():
         return "Database connection failed!"
 
 
-# Google Sheet CSV export URL
+# Google Sheet CSV export URLs
 Smoothie_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSob3Z4VWarQN4fiwdWX3UjH35ZsGddD5oGQXvd0FVqkg-NQw9GkCzLeXyVQeakmLzeZvIfXYace_3C/pub?output=csv"
 Toast_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSg9CzlFJnSNaL_VTcI0X7D5w_tbsc6Yr0dyrTH9-8Sj_-xaU13gFEnUygd1v4GKwQWvu-iaqFdzwRb/pub?output=csv"
 Workout_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRo6yrMCi9ZemNFmd_P91rTd5jp2VBWPE1xi-HMWk6hMo1eQGD_6NIfOaxew5wXZaNNZMqITLmbflmK/pub?output=csv"
 ICECREAM_MENU_CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTGMpB5gjOd0uMLhYUSuvW-tsav2YHEtqwDVGBiVME6rdoZJbwCwFkcueaWsbf1NUUo6Lzg00fjqh6z/pub?output=csv"
+REFERRAL_SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vSMJKLe-A2NZASP1sl1dNKRdK5Ne-3h-4Cy3bI4I0N_Ikh-j5Tk1bLFqO9DXgO88u3i87REtZJDZWEk/pub?output=csv"
+
 # Make 'user' globally available in templates
 @app.context_processor
 def inject_user():
     return dict(user=session.get('user'))
+
+
+def validate_referral_code(code):
+    """Returns (is_valid: bool) by checking the referral Google Sheet."""
+    try:
+        import requests as req
+        res = req.get(REFERRAL_SHEET_URL, timeout=6)
+        valid_codes = [
+            row.split(",")[0].strip().lower()
+            for row in res.text.split("\n")
+            if row.strip()
+        ]
+        return code.strip().lower() in valid_codes
+    except Exception as e:
+        print("❌ Referral sheet error:", e)
+        return False
 
 
 @app.route('/')
@@ -77,7 +94,6 @@ def home():
         reviews = []
 
     return render_template('index.html', reviews=reviews)
-
 
 
 @app.route('/menu_select')
@@ -138,6 +154,7 @@ import traceback
 def order_select():
     return render_template('order_select.html')
 
+
 @app.route('/order_smoothie', methods=['GET', 'POST'])
 def order_smoothie():
     if 'user' not in session:
@@ -145,9 +162,7 @@ def order_smoothie():
 
     user_id = session['user']['user_id']
 
-    # -------------------------------------------------
     # Load menu
-    # -------------------------------------------------
     try:
         df = pd.read_csv(Smoothie_MENU_CSV_URL)
         df.fillna('', inplace=True)
@@ -158,9 +173,7 @@ def order_smoothie():
         print("❌ Dropdown load error:", e)
         smoothies, addons, prices = [], [], {}
 
-    # -------------------------------------------------
-    # Fetch user's reward points (SAFE)
-    # -------------------------------------------------
+    # Fetch user reward points
     user_rewards = 0
     db = get_db_connection()
     if db:
@@ -176,9 +189,6 @@ def order_smoothie():
             cursor.close()
             db.close()
 
-    # -------------------------------------------------
-    # Handle POST (order submission)
-    # -------------------------------------------------
     if request.method == 'POST':
         smoothie_list = request.form.getlist('smoothie[]')
         quantity_list = request.form.getlist('quantity[]')
@@ -188,7 +198,6 @@ def order_smoothie():
         for key in request.form.keys():
             if key.startswith('addon'):
                 addon_list.extend([v for v in request.form.getlist(key) if v and v.strip()])
-
         if not addon_list:
             addon_list = [a for a in request.form.getlist('addon[]') if a and a.strip()]
 
@@ -197,7 +206,17 @@ def order_smoothie():
         except:
             redeem_points = 0
 
-        # Build order details
+        # Referral code
+        referral_code = request.form.get('referral_code', '').strip().lower()
+        referral_valid = False
+        referral_discount = 0
+
+        if referral_code:
+            referral_valid = validate_referral_code(referral_code)
+            if referral_valid:
+                referral_discount = 10  # ₹10 flat discount for smoothies
+
+        # Build order string
         smoothie_data = [
             f"{s.strip()} x{q.strip()}"
             for s, q in zip(smoothie_list, quantity_list)
@@ -210,9 +229,7 @@ def order_smoothie():
             flash("Please select at least one smoothie or addon.", "error")
             return redirect('/order_smoothie')
 
-        # -------------------------------------------------
         # Calculate total
-        # -------------------------------------------------
         total_bill = 0.0
         total_smoothies = 0
 
@@ -225,24 +242,22 @@ def order_smoothie():
 
         for a in addon_list:
             if a and a.strip():
-                addon_price = float(prices.get(a.strip(), 0) or 0)
-                total_bill += addon_price
+                total_bill += float(prices.get(a.strip(), 0) or 0)
 
+        # Multi-item discount
         if total_smoothies >= 2:
             total_bill *= 0.95
 
+        # Referral discount
+        if referral_valid:
+            total_bill = max(total_bill - referral_discount, 0)
+
         total_bill = round(total_bill, 2)
 
-        # -------------------------------------------------
-        # Rewards
-        # -------------------------------------------------
         reward_used = min(redeem_points, total_bill, user_rewards)
         total_after_rewards = round(total_bill - reward_used, 2)
         reward_earned = int(round(total_after_rewards * 0.04))
 
-        # -------------------------------------------------
-        # Save pending order in session
-        # -------------------------------------------------
         session['pending_order'] = {
             'type': 'normal',
             'category': 'smoothie',
@@ -253,15 +268,17 @@ def order_smoothie():
             'smoothie_price': total_bill,
             'reward_used': reward_used,
             'reward_earned': reward_earned,
-            'total_after_rewards': total_after_rewards
+            'total_after_rewards': total_after_rewards,
+            'referral_code': referral_code if referral_valid else '',
+            'referral_discount': referral_discount if referral_valid else 0
         }
+
+        if referral_valid:
+            flash(f"✅ Referral code applied! ₹10 discount added.", "success")
 
         flash(f"Smoothie order added. Total after rewards: ₹{total_after_rewards}", "info")
         return redirect('/payment_page')
 
-    # -------------------------------------------------
-    # GET request
-    # -------------------------------------------------
     return render_template(
         'order_smoothie.html',
         smoothies=smoothies,
@@ -270,7 +287,7 @@ def order_smoothie():
         user_rewards=user_rewards
     )
 
-    
+
 @app.route('/order_toast', methods=['GET', 'POST'])
 def order_toast():
     if 'user' not in session:
@@ -282,27 +299,21 @@ def order_toast():
         df = pd.read_csv(Toast_MENU_CSV_URL)
         df.fillna('', inplace=True)
 
-        # Toast names for dropdown
         toasts = df.iloc[0:15, 1].dropna().tolist()
 
-        # 🔥 SAFELY detect price column
         price_col = df.columns[4]
-
-        # Clean price column
         df[price_col] = (
             df[price_col]
             .astype(str)
             .str.replace("₹", "", regex=False)
             .str.strip()
         )
-
         df[price_col] = pd.to_numeric(df[price_col], errors="coerce").fillna(0)
 
         prices_backend = {
             str(name).strip().lower(): float(price)
             for name, price in zip(df.iloc[:, 1], df[price_col])
         }
-
         prices_frontend = {
             str(name): float(price)
             for name, price in zip(df.iloc[:, 1], df[price_col])
@@ -313,9 +324,7 @@ def order_toast():
         flash("Unable to load toast menu. Please try again.", "error")
         toasts, prices_backend, prices_frontend = [], {}, {}
 
-    # ---------------------------------
-    # Fetch user rewards (SAFE)
-    # ---------------------------------
+    # Fetch user rewards
     user_rewards = 0
     db = get_db_connection()
     if db:
@@ -331,9 +340,6 @@ def order_toast():
             cursor.close()
             db.close()
 
-    # ---------------------------------
-    # POST → submit order
-    # ---------------------------------
     if request.method == 'POST':
         toast_list = request.form.getlist('toast[]')
         quantity_list = request.form.getlist('quantity[]')
@@ -343,21 +349,26 @@ def order_toast():
         except:
             redeem_points = 0
 
+        # Referral code
+        referral_code = request.form.get('referral_code', '').strip().lower()
+        referral_valid = False
+        referral_discount = 0
+
+        if referral_code:
+            referral_valid = validate_referral_code(referral_code)
+
         toast_data = [
             f"{t.strip()} x{q.strip()}"
             for t, q in zip(toast_list, quantity_list)
             if t and t.strip() and q and q.strip().isdigit()
         ]
-
         toast_str = ', '.join(toast_data)
 
         if not toast_str:
             flash("Please select at least one toast item.", "error")
             return redirect('/order_toast')
 
-        # ---------------------------------
-        # Calculate total bill
-        # ---------------------------------
+        # Calculate total
         total_bill = 0.0
         total_items = 0
 
@@ -372,18 +383,20 @@ def order_toast():
         if total_items >= 2:
             total_bill *= 0.95
 
+        # Referral discount (10%)
+        if referral_valid:
+            referral_discount = round(total_bill * 0.10, 2)
+            total_bill = round(max(total_bill - referral_discount, 0), 2)
+
         total_bill = round(total_bill, 2)
 
-        # ---------------------------------
-        # Rewards
-        # ---------------------------------
         reward_used = min(redeem_points, total_bill, user_rewards)
         total_after_rewards = round(total_bill - reward_used, 2)
         reward_earned = int(round(total_after_rewards * 0.04))
 
-        # ---------------------------------
-        # Save pending order
-        # ---------------------------------
+        if referral_valid:
+            flash(f"✅ Referral code applied! ₹{referral_discount} discount added.", "success")
+
         session['pending_order'] = {
             'type': 'normal',
             'category': 'toast',
@@ -395,22 +408,20 @@ def order_toast():
             'total_bill': total_bill,
             'reward_used': reward_used,
             'reward_earned': reward_earned,
-            'total_after_rewards': total_after_rewards
+            'total_after_rewards': total_after_rewards,
+            'referral_code': referral_code if referral_valid else '',
+            'referral_discount': referral_discount
         }
 
         flash(f"Toast order added. Total after rewards: ₹{total_after_rewards}", "info")
         return redirect('/payment_page')
 
-    # ---------------------------------
-    # Render page
-    # ---------------------------------
     return render_template(
         'order_toast.html',
         toasts=toasts,
         prices=prices_frontend,
         user_rewards=user_rewards
     )
-
 
 
 from itertools import zip_longest
@@ -422,9 +433,7 @@ def order_workout():
 
     user_id = session['user']['user_id']
 
-    # -------------------------------------------------
     # Load menu
-    # -------------------------------------------------
     try:
         df = pd.read_csv(Workout_MENU_CSV_URL)
         df.fillna('', inplace=True)
@@ -439,9 +448,7 @@ def order_workout():
         print("❌ Workout dropdown load error:", e)
         workouts, addons, combos, prices = [], [], [], {}
 
-    # -------------------------------------------------
-    # Get rewards balance (SAFE)
-    # -------------------------------------------------
+    # Get rewards balance
     user_rewards = 0
     db = get_db_connection()
     if db:
@@ -457,11 +464,7 @@ def order_workout():
             cursor.close()
             db.close()
 
-    # -------------------------------------------------
-    # POST REQUEST
-    # -------------------------------------------------
     if request.method == 'POST':
-
         workout_list = request.form.getlist('workout[]')
         quantity_list = request.form.getlist('quantity[]')
         addon_list = request.form.getlist('addon[]')
@@ -479,9 +482,7 @@ def order_workout():
         except:
             redeem_points = 0
 
-        # -------------------------------------------------
-        # Total Calculation
-        # -------------------------------------------------
+        # Calculate total
         total_bill = 0.0
         total_items = 0
         workout_display = []
@@ -506,12 +507,10 @@ def order_workout():
             total_items += qty
             workout_display.append(f"{w} x{qty}")
 
-            # Addon calculated per qty
             if a:
                 addon_price = float(prices.get(a, 0))
                 total_bill += addon_price * qty
 
-        # Combo pricing
         if combo:
             total_bill += float(prices.get(combo, 0)) * max(combo_qty, 1)
             total_items += max(combo_qty, 1)
@@ -519,7 +518,6 @@ def order_workout():
         if combo_addon:
             total_bill += float(prices.get(combo_addon, 0)) * max(combo_qty, 1)
 
-        # Quantity discount
         discount_applied = False
         if total_items >= 2:
             total_bill *= 0.95
@@ -527,16 +525,10 @@ def order_workout():
 
         total_bill = round(total_bill, 2)
 
-        # -------------------------------------------------
-        # Rewards Calculation
-        # -------------------------------------------------
         reward_used = min(redeem_points, user_rewards, total_bill)
         total_after_rewards = round(total_bill - reward_used, 2)
         reward_earned = int(round(total_after_rewards * 0.04))
 
-        # -------------------------------------------------
-        # Save to session
-        # -------------------------------------------------
         session['pending_order'] = {
             'type': 'normal',
             'category': 'workout',
@@ -548,8 +540,6 @@ def order_workout():
             'quantity_list': quantity_list,
             'total_bill': total_bill,
             'discount_applied': discount_applied,
-
-            # Required in payment_page
             'reward_used': reward_used,
             'reward_earned': reward_earned,
             'total_after_rewards': total_after_rewards
@@ -557,7 +547,6 @@ def order_workout():
 
         return redirect('/payment_page')
 
-    # GET REQUEST
     return render_template(
         'order_workout.html',
         workouts=workouts,
@@ -566,8 +555,6 @@ def order_workout():
         prices=prices,
         user_rewards=user_rewards
     )
-
-
 
 
 # ----------------- ORDER CUSTOMIZE -----------------
@@ -592,83 +579,20 @@ def order_customize():
             {'name': 'Avacado Frozen Halves', 'price': 40, 'macros': {'cal': 120, 'protein': 1.5, 'carbs': 6, 'fat': 10}}
         ],
         'whey': [
-  {
-    'name': 'Half Scoop – Belgian Chocolate Whey',
-    'price': 60,
-    'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}
-  },
-  {
-    'name': 'Full Scoop – Belgian Chocolate Whey',
-    'price': 100,
-    'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}
-  },
-
-  {
-    'name': 'Half Scoop – Chocolate Hazelnut Whey',
-    'price': 60,
-    'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}
-  },
-  {
-    'name': 'Full Scoop – Chocolate Hazelnut Whey',
-    'price': 100,
-    'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}
-  },
-
-  {
-    'name': 'Half Scoop – Bold Cold Coffee Whey',
-    'price': 60,
-    'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}
-  },
-  {
-    'name': 'Full Scoop – Bold Cold Coffee Whey',
-    'price': 100,
-    'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}
-  },
-
-  {
-    'name': 'Half Scoop – Traditional Malai Kulfi Whey',
-    'price': 60,
-    'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}
-  },
-  {
-    'name': 'Full Scoop – Traditional Malai Kulfi Whey',
-    'price': 100,
-    'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}
-  },
-
-  {
-    'name': 'Half Scoop – Creamy Caramel Crème Whey',
-    'price': 60,
-    'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}
-  },
-  {
-    'name': 'Full Scoop – Creamy Caramel Crème Whey',
-    'price': 100,
-    'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}
-  },
-
-  {
-    'name': 'Half Scoop – Raw Whey',
-    'price': 60,
-    'macros': {'cal': 55, 'protein': 13, 'carbs': 1, 'fat': 0.5}
-  },
-  {
-    'name': 'Full Scoop – Raw Whey',
-    'price': 100,
-    'macros': {'cal': 110, 'protein': 26, 'carbs': 2, 'fat': 1}
-  },
-
-  {
-    'name': 'Half Scoop – Mango Whey',
-    'price': 60,
-    'macros': {'cal': 62, 'protein': 12, 'carbs': 2, 'fat': 1}
-  },
-  {
-    'name': 'Full Scoop – Mango Whey',
-    'price': 100,
-    'macros': {'cal': 124, 'protein': 24, 'carbs': 4, 'fat': 2}
-  }
-
+            {'name': 'Half Scoop – Belgian Chocolate Whey', 'price': 60, 'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}},
+            {'name': 'Full Scoop – Belgian Chocolate Whey', 'price': 100, 'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}},
+            {'name': 'Half Scoop – Chocolate Hazelnut Whey', 'price': 60, 'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}},
+            {'name': 'Full Scoop – Chocolate Hazelnut Whey', 'price': 100, 'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}},
+            {'name': 'Half Scoop – Bold Cold Coffee Whey', 'price': 60, 'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}},
+            {'name': 'Full Scoop – Bold Cold Coffee Whey', 'price': 100, 'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}},
+            {'name': 'Half Scoop – Traditional Malai Kulfi Whey', 'price': 60, 'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}},
+            {'name': 'Full Scoop – Traditional Malai Kulfi Whey', 'price': 100, 'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}},
+            {'name': 'Half Scoop – Creamy Caramel Crème Whey', 'price': 60, 'macros': {'cal': 60, 'protein': 12, 'carbs': 1.5, 'fat': 1}},
+            {'name': 'Full Scoop – Creamy Caramel Crème Whey', 'price': 100, 'macros': {'cal': 120, 'protein': 24, 'carbs': 3, 'fat': 2}},
+            {'name': 'Half Scoop – Raw Whey', 'price': 60, 'macros': {'cal': 55, 'protein': 13, 'carbs': 1, 'fat': 0.5}},
+            {'name': 'Full Scoop – Raw Whey', 'price': 100, 'macros': {'cal': 110, 'protein': 26, 'carbs': 2, 'fat': 1}},
+            {'name': 'Half Scoop – Mango Whey', 'price': 60, 'macros': {'cal': 62, 'protein': 12, 'carbs': 2, 'fat': 1}},
+            {'name': 'Full Scoop – Mango Whey', 'price': 100, 'macros': {'cal': 124, 'protein': 24, 'carbs': 4, 'fat': 2}}
         ],
         'toppings': [
             {'name': 'Choco Chips', 'price': 10, 'macros': {'cal': 70, 'protein': 0.5, 'carbs': 9, 'fat': 4}},
@@ -691,7 +615,7 @@ def order_customize():
         toppings = request.form.get('toppings') or ""
         addons = request.form.get('addons') or ""
 
-        # ✅ Calculate total price
+        # Calculate total price
         total = 0
         for category, choice in [('base', base), ('ingredients', ingredients), ('whey', whey), ('toppings', toppings), ('addons', addons)]:
             for item in grouped[category]:
@@ -700,7 +624,19 @@ def order_customize():
                     break
         total = round(total, 2)
 
-        # ✅ Save order details (no rewards)
+        # Referral code
+        referral_code = request.form.get('referral_code', '').strip().lower()
+        referral_valid = False
+        referral_discount = 0
+
+        if referral_code:
+            referral_valid = validate_referral_code(referral_code)
+
+        if referral_valid:
+            referral_discount = round(total * 0.10, 2)
+            total = round(max(total - referral_discount, 0), 2)
+            flash(f"✅ Referral code applied! ₹{referral_discount} discount added.", "success")
+
         session['pending_order'] = {
             'type': 'customized',
             'category': 'customize',
@@ -709,14 +645,16 @@ def order_customize():
             'whey': whey,
             'toppings': toppings,
             'addons': addons,
-            'total_bill': total
+            'total_bill': total,
+            'referral_code': referral_code if referral_valid else '',
+            'referral_discount': referral_discount
         }
 
         flash(f"Custom smoothie added. Payable amount: ₹{total}", "info")
         return redirect('/payment_page')
 
-    # ✅ Render page
     return render_template('order_customize.html', grouped=grouped)
+
 
 @app.route('/order_icecream', methods=['GET', 'POST'])
 def order_icecream():
@@ -737,9 +675,7 @@ def order_icecream():
             .str.replace("₹", "")
             .str.strip()
         )
-
         df["Price (₹)"] = pd.to_numeric(df["Price (₹)"], errors="coerce")
-
         prices = df.set_index("Item Name")["Price (₹)"].to_dict()
 
     except Exception as e:
@@ -747,9 +683,7 @@ def order_icecream():
         flash("Unable to load icecream menu. Please try again.", "error")
         icecreams, prices = [], {}
 
-    # ---------------------------------
-    # Fetch user rewards (SAFE)
-    # ---------------------------------
+    # Fetch user rewards
     user_rewards = 0
     db = get_db_connection()
     if db:
@@ -765,9 +699,6 @@ def order_icecream():
             cursor.close()
             db.close()
 
-    # -----------------------------
-    # POST → submit order
-    # -----------------------------
     if request.method == 'POST':
         icecream_list = request.form.getlist('icecream[]')
         quantity_list = request.form.getlist('quantity[]')
@@ -777,19 +708,25 @@ def order_icecream():
         except:
             redeem_points = 0
 
+        # Referral code
+        referral_code = request.form.get('referral_code', '').strip().lower()
+        referral_valid = False
+        referral_discount = 0
+
+        if referral_code:
+            referral_valid = validate_referral_code(referral_code)
+
         icecream_data = [
             f"{item} x{qty}"
             for item, qty in zip(icecream_list, quantity_list)
             if item and qty.isdigit()
         ]
-
         icecream_str = ", ".join(icecream_data)
 
         if not icecream_str:
             flash("Please select at least one icecream item.", "error")
             return redirect('/order_icecream')
 
-        # Calculate total bill
         total_bill = 0
         total_items = 0
 
@@ -803,12 +740,18 @@ def order_icecream():
         if total_items >= 2:
             total_bill *= 0.95
 
+        if referral_valid:
+            referral_discount = round(total_bill * 0.10, 2)
+            total_bill = round(max(total_bill - referral_discount, 0), 2)
+
         total_bill = round(total_bill, 2)
 
-        # Reward logic
         reward_used = min(redeem_points, user_rewards, total_bill)
         total_after_rewards = round(total_bill - reward_used, 2)
         reward_earned = int(round(total_after_rewards * 0.04))
+
+        if referral_valid:
+            flash(f"✅ Referral code applied! ₹{referral_discount} discount added.", "success")
 
         session['pending_order'] = {
             'type': 'normal',
@@ -823,7 +766,9 @@ def order_icecream():
             'total_bill': total_bill,
             'reward_used': reward_used,
             'reward_earned': reward_earned,
-            'total_after_rewards': total_after_rewards
+            'total_after_rewards': total_after_rewards,
+            'referral_code': referral_code if referral_valid else '',
+            'referral_discount': referral_discount
         }
 
         return redirect('/payment_page')
@@ -856,7 +801,7 @@ def payment_page():
     try:
         cursor = db.cursor(dictionary=True)
 
-        # ---------------------- REWARD LOAD --------------------------
+        # Reward load
         cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
         result = cursor.fetchone()
 
@@ -867,7 +812,7 @@ def payment_page():
         else:
             current_rewards = int(result["points"])
 
-        # ---------------------- OPERATORS ----------------------------
+        # Operators
         import requests, csv, io
         SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
         operator_data = {}
@@ -875,7 +820,6 @@ def payment_page():
         try:
             response = requests.get(SHEET_URL, timeout=6)
             csv_data = list(csv.reader(io.StringIO(response.text)))
-
             for row in csv_data[1:]:
                 if len(row) >= 3:
                     operator_data[row[1].strip()] = {
@@ -901,11 +845,12 @@ def payment_page():
         total_bill = safe_float(pending_order.get("total_bill"))
         reward_used = safe_int(pending_order.get("reward_used"))
         reward_earned = safe_int(pending_order.get("reward_earned"))
+        referral_discount = safe_float(pending_order.get("referral_discount", 0))
 
         reward_used = min(reward_used, current_rewards)
         total_after_rewards = round(max(total_bill - reward_used, 0), 2)
 
-        # ------------------------- POST -------------------------------
+        # POST
         if request.method == "POST":
             operator_code_form = request.form.get("operator_code", "").strip()
             payment_mode = request.form.get("payment_mode", "").lower()
@@ -936,14 +881,14 @@ def payment_page():
             else:
                 oc = on = ol = None
 
-            # ----------------- UPDATE REWARDS ---------------------
+            # Update rewards
             new_points = max(current_rewards - reward_used, 0) + reward_earned
             cursor.execute(
                 "UPDATE rewards SET points=%s WHERE user_id=%s",
                 (new_points, user_id)
             )
 
-            # ----------------- INSERT ORDER ------------------------------
+            # Insert order
             order_type = pending_order.get("type", "normal")
 
             if order_type == "customized":
@@ -966,7 +911,6 @@ def payment_page():
                     reward_earned,
                     payment_mode
                 ))
-
                 order_id = cursor.lastrowid
 
             else:
@@ -1000,10 +944,8 @@ def payment_page():
                     reward_earned,
                     payment_mode
                 ))
-
                 order_id = cursor.lastrowid
 
-            # ----------------- OPERATOR LOG ------------------------------
             if oc:
                 cursor.execute("""
                     INSERT INTO operator_orders (
@@ -1029,7 +971,7 @@ def payment_page():
             flash(f"Payment successful! Paid ₹{total_after_rewards}", "success")
             return redirect("/profile")
 
-        # ------------------ GET ----------------------
+        # GET
         order_for_display = pending_order.copy()
         order_for_display["total_bill"] = total_after_rewards
 
@@ -1044,7 +986,8 @@ def payment_page():
             total_bill=total_bill,
             total_after_rewards=total_after_rewards,
             reward_used=reward_used,
-            reward_earned=reward_earned
+            reward_earned=reward_earned,
+            referral_discount=referral_discount
         )
 
     finally:
@@ -1062,9 +1005,6 @@ def signup():
         gender = request.form.get('gender')
         goal = request.form.get('goal')
 
-        # --------------------
-        # Basic Validations
-        # --------------------
         if not email or '@' not in email:
             flash("Please enter a valid email.", "error")
             return redirect('/signup')
@@ -1085,9 +1025,6 @@ def signup():
             flash("Please select your fitness goal.", "error")
             return redirect('/signup')
 
-        # --------------------
-        # Insert Into Database (SAFE)
-        # --------------------
         db = get_db_connection()
         if not db:
             flash("Database temporarily unavailable.", "error")
@@ -1099,9 +1036,7 @@ def signup():
                 INSERT INTO users (username, email, phone, birthday, gender, goal)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (username, email, phone, birthday, gender, goal))
-
             db.commit()
-
             flash("Signup successful. Please log in.", "success")
             return redirect('/login')
 
@@ -1150,6 +1085,7 @@ def login():
 
     return render_template('login.html')
 
+
 @app.route('/logout')
 def logout():
     session.clear()
@@ -1178,9 +1114,7 @@ def profile():
         cursor = db.cursor(dictionary=True)
         formatted_orders = []
 
-        # --------------------------------------------
-        # FETCH STANDARD ORDERS
-        # --------------------------------------------
+        # Fetch standard orders
         cursor.execute("""
             SELECT order_id, smoothie, toast, icecream, workout,
                    addons, combo, quantity, total_bill,
@@ -1192,9 +1126,7 @@ def profile():
         """, (user_id,))
         all_orders = cursor.fetchall()
 
-        # --------------------------------------------
-        # FETCH CUSTOMIZED SMOOTHIES
-        # --------------------------------------------
+        # Fetch customized orders
         cursor.execute("""
             SELECT order_id, base, ingredients, whey, toppings, addons,
                    total_price, reward_points_used, reward_points_earned,
@@ -1205,11 +1137,8 @@ def profile():
         """, (user_id,))
         custom_orders = cursor.fetchall()
 
-        # --------------------------------------------
-        # FORMAT STANDARD ORDERS
-        # --------------------------------------------
+        # Format standard orders
         for order in all_orders:
-
             if order.get('icecream'):
                 item_name = order['icecream'] + " (Ice-Cream Order)"
             elif order.get('toast'):
@@ -1223,11 +1152,9 @@ def profile():
                 item_name += f" | Combo: {order['combo']}"
 
             addons_str = order['addons'] if order['addons'] else "None"
-
             rewards_used = int(order['reward_points_used'] or 0)
             reward_text = f" ({rewards_used} pts used)" if rewards_used else ""
             total_final = f"₹{float(order['total_bill']):.2f}{reward_text}"
-
             order_time = (
                 order['order_time'].strftime("%d %b %Y, %I:%M %p")
                 if order['order_time'] else "N/A"
@@ -1244,11 +1171,8 @@ def profile():
                 'payment_status': f"Paid via {order['payment_mode']}" if order['payment_mode'] else "Awaiting Payment",
             })
 
-        # --------------------------------------------
-        # FORMAT CUSTOMIZED ORDERS
-        # --------------------------------------------
+        # Format customized orders
         for order in custom_orders:
-
             parts = [order['base'], order['whey']]
             if order['ingredients']:
                 parts.append(order['ingredients'])
@@ -1256,13 +1180,10 @@ def profile():
                 parts.append(f"Toppings: {order['toppings']}")
 
             smoothie_label = ", ".join(parts) + " (Custom Smoothie)"
-
             addons_str = order['addons'] if order['addons'] else "None"
-
             rewards_used = int(order['reward_points_used'] or 0)
             reward_text = f" ({rewards_used} pts used)" if rewards_used else ""
             total_final = f"₹{float(order['total_price']):.2f}{reward_text}"
-
             order_time = (
                 order['order_time'].strftime("%d %b %Y, %I:%M %p")
                 if order['order_time'] else "N/A"
@@ -1279,17 +1200,13 @@ def profile():
                 'payment_status': f"Paid via {order['payment_mode']}" if order['payment_mode'] else "Awaiting Payment",
             })
 
-        # --------------------------------------------
-        # SORT FINAL ORDER LIST
-        # --------------------------------------------
+        # Sort combined list
         formatted_orders.sort(
             key=lambda x: datetime.strptime(x['order_time'], "%d %b %Y, %I:%M %p"),
             reverse=True
         )
 
-        # --------------------------------------------
-        # REWARD BALANCE
-        # --------------------------------------------
+        # Reward balance
         cursor.execute("SELECT points FROM rewards WHERE user_id=%s", (user_id,))
         result = cursor.fetchone()
 
@@ -1300,9 +1217,7 @@ def profile():
         else:
             current_rewards = int(result['points'])
 
-        # --------------------------------------------
-        # SPIN MILESTONE LOGIC
-        # --------------------------------------------
+        # Spin milestone logic
         total_orders = len(formatted_orders)
         milestone = None
         claimed = False
@@ -1315,9 +1230,6 @@ def profile():
             """, (user_id, milestone))
             claimed = cursor.fetchone() is not None
 
-        # --------------------------------------------
-        # RENDER PAGE
-        # --------------------------------------------
         return render_template(
             'profile.html',
             user=session['user'],
@@ -1339,10 +1251,6 @@ def profile():
 
 
 def confirm_payment(order_id, payment_mode):
-    """
-    Call this function once payment is successful.
-    Updates the order's payment_mode and adds earned reward points to user's account.
-    """
     db = get_db_connection()
     if not db:
         print("❌ DB unavailable during payment confirmation")
@@ -1350,7 +1258,6 @@ def confirm_payment(order_id, payment_mode):
 
     try:
         cursor = db.cursor(dictionary=True)
-
         cursor.execute("SELECT user_id, reward_points_earned FROM orders WHERE order_id=%s", (order_id,))
         order = cursor.fetchone()
         if not order:
@@ -1378,8 +1285,7 @@ def confirm_payment(order_id, payment_mode):
         cursor.close()
         db.close()
 
-    
-    
+
 @app.route("/claim_spin", methods=["POST"])
 def claim_spin():
     if "user" not in session:
@@ -1398,7 +1304,6 @@ def claim_spin():
     try:
         cursor = db.cursor(dictionary=True)
 
-        # Prevent duplicate claim
         cursor.execute("""
             SELECT 1 FROM spin_claims WHERE user_id=%s AND milestone=%s
         """, (user_id, milestone))
@@ -1407,13 +1312,11 @@ def claim_spin():
             flash("Spin already claimed.", "error")
             return redirect("/profile")
 
-        # Insert claim
         cursor.execute("""
             INSERT INTO spin_claims (user_id, milestone, claimed)
             VALUES (%s, %s, TRUE)
         """, (user_id, milestone))
 
-        # Add reward
         cursor.execute("""
             INSERT INTO rewards (user_id, points)
             VALUES (%s, %s)
@@ -1428,6 +1331,7 @@ def claim_spin():
     finally:
         cursor.close()
         db.close()
+
 
 @app.route('/verify_spin', methods=['GET', 'POST'])
 def verify_spin():
@@ -1453,9 +1357,6 @@ def verify_spin():
     try:
         cursor = db.cursor(dictionary=True)
 
-        # -------------------------------------------------------
-        # Prevent duplicate verification
-        # -------------------------------------------------------
         cursor.execute("""
             SELECT 1 FROM spin_claims 
             WHERE user_id=%s AND milestone=%s AND claimed=TRUE
@@ -1465,20 +1366,13 @@ def verify_spin():
             flash("This spin is already verified.", "error")
             return redirect("/profile")
 
-        # -------------------------------------------------------
-        # Ensure rewards row
-        # -------------------------------------------------------
         cursor.execute("""
             INSERT IGNORE INTO rewards (user_id, points)
             VALUES (%s, 0)
         """, (user_id,))
         db.commit()
 
-        # -------------------------------------------------------
-        # Load operator sheet
-        # -------------------------------------------------------
         SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
-
         operator_data = {}
         sheet_loaded = False
 
@@ -1494,29 +1388,21 @@ def verify_spin():
                         "name": row[0].strip(),
                         "location": row[2].strip()
                     }
-
             sheet_loaded = True
 
         except Exception as e:
             print("Sheet error:", e)
             flash("Could not load operator data.", "error")
 
-        # -------------------------------------------------------
-        # Session temp values
-        # -------------------------------------------------------
         valid_code = session.get('spin_valid_code', False)
         operator_name = session.get('spin_operator_name', '')
         operator_code = session.get('spin_operator_code', '')
         operator_location = session.get('spin_operator_location', '')
 
-        # -------------------------------------------------------
-        # POST logic
-        # -------------------------------------------------------
         if request.method == 'POST':
             form_code = (request.form.get('operator_code') or '').strip()
             form_points = (request.form.get('reward_points') or '').strip()
 
-            # ---------------- STEP 1: Verify operator ----------------
             if form_code and not form_points:
                 if not sheet_loaded:
                     flash("Operator sheet not loaded.", "error")
@@ -1536,7 +1422,6 @@ def verify_spin():
                 flash(f"Operator verified: {match['name']}", "success")
                 return redirect(f"/verify_spin?milestone={milestone}")
 
-            # ---------------- STEP 2: Add reward ----------------
             if form_points == "":
                 flash("Enter reward points.", "error")
                 return redirect(f"/verify_spin?milestone={milestone}")
@@ -1551,9 +1436,6 @@ def verify_spin():
                 flash("Verify operator first.", "error")
                 return redirect(f"/verify_spin?milestone={milestone}")
 
-            # -------------------------------------------------------
-            # Final duplicate protection
-            # -------------------------------------------------------
             cursor.execute("""
                 SELECT 1 FROM spin_claims 
                 WHERE user_id=%s AND milestone=%s AND claimed=TRUE
@@ -1563,54 +1445,36 @@ def verify_spin():
                 flash("This spin is already verified.", "error")
                 return redirect("/profile")
 
-            # -------------------------------------------------------
-            # Insert claim
-            # -------------------------------------------------------
             cursor.execute("""
                 INSERT INTO spin_claims 
                 (user_id, milestone, claimed, reward_points, operator_name, operator_code, operator_location)
                 VALUES (%s, %s, TRUE, %s, %s, %s, %s)
             """, (user_id, milestone, form_points, operator_name, operator_code, operator_location))
 
-            # -------------------------------------------------------
-            # Add reward points
-            # -------------------------------------------------------
             cursor.execute("""
                 INSERT INTO rewards (user_id, points)
                 VALUES (%s, %s)
                 ON DUPLICATE KEY UPDATE points = points + VALUES(points)
             """, (user_id, form_points))
 
-            # -------------------------------------------------------
-            # Log operator verification
-            # -------------------------------------------------------
             cursor.execute("""
                 INSERT INTO operator_spin_logs
                 (user_id, milestone, operator_name, operator_code, operator_location, points_added)
                 VALUES (%s, %s, %s, %s, %s, %s)
             """, (
-                user_id,
-                milestone,
-                operator_name,
-                operator_code,
-                operator_location,
+                user_id, milestone,
+                operator_name, operator_code, operator_location,
                 form_points
             ))
 
             db.commit()
 
-            # -------------------------------------------------------
-            # Clear temp session
-            # -------------------------------------------------------
             for k in ['spin_valid_code', 'spin_operator_name', 'spin_operator_code', 'spin_operator_location']:
                 session.pop(k, None)
 
             flash(f"Spin Verified! +{form_points} points added.", "success")
             return redirect('/profile')
 
-        # -------------------------------------------------------
-        # GET render
-        # -------------------------------------------------------
         return render_template(
             "verify_spin.html",
             milestone=milestone,
@@ -1625,13 +1489,12 @@ def verify_spin():
         db.close()
 
 
-
 @app.route("/process_spin_verification", methods=["POST"])
 def process_spin_verification():
     if 'user' not in session:
         return redirect('/login')
 
-    user_id = session["user"]["user_id"]  # 🔥 FIXED SECURITY
+    user_id = session["user"]["user_id"]
     milestone = int(request.form.get("milestone"))
     operator_code_form = request.form.get("operator_code", "").strip()
     earned_points = int(request.form.get("earned_points", 0))
@@ -1639,7 +1502,6 @@ def process_spin_verification():
     import requests, csv, io
 
     SHEET_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQrzOKK1RFl-aMdq36fi6W79p1YUgMbKYqShXQCitS7klGY_24KBeTHTsoAPsCjs_zzFEF2l8AjebhN/pub?output=csv"
-
     operator_data = {}
 
     try:
@@ -1672,7 +1534,6 @@ def process_spin_verification():
     try:
         cursor = db.cursor(dictionary=True)
 
-        # Prevent duplicate claim
         cursor.execute("""
             SELECT 1 FROM spin_claims WHERE user_id=%s AND milestone=%s
         """, (user_id, milestone))
@@ -1681,30 +1542,24 @@ def process_spin_verification():
             flash("Spin already verified.", "error")
             return redirect("/profile")
 
-        # Insert claim
         cursor.execute("""
             INSERT INTO spin_claims (user_id, milestone, claimed)
             VALUES (%s, %s, TRUE)
         """, (user_id, milestone))
 
-        # Add reward
         cursor.execute("""
             INSERT INTO rewards (user_id, points)
             VALUES (%s, %s)
             ON DUPLICATE KEY UPDATE points = points + VALUES(points)
         """, (user_id, earned_points))
 
-        # Log operator
         cursor.execute("""
             INSERT INTO operator_spin_logs 
             (user_id, milestone, operator_name, operator_code, operator_location, points_added)
             VALUES (%s, %s, %s, %s, %s, %s)
         """, (
-            user_id,
-            milestone,
-            operator_name,
-            operator_code_form,
-            operator_location,
+            user_id, milestone,
+            operator_name, operator_code_form, operator_location,
             earned_points
         ))
 
@@ -1737,7 +1592,6 @@ def reviews():
         db.close()
 
     return render_template('index.html', reviews=reviews)
-
 
 
 @app.route('/submit_review', methods=['POST'])
@@ -1774,12 +1628,3 @@ def submit_review():
         flash("Could not submit review. Try again.", "error")
 
     return redirect('/')
-
-
-
-#E:\wow\python.exe e:\wow\app.py 
-
-
-
-
-
