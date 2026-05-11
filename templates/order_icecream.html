@@ -30,8 +30,8 @@
       background: #ffffffff;
       color: white;
       border: none;
-      margin-top:4px;
-      padding: 6px 10px;
+      margin-top:2px;
+      padding: 4px 10px;
       border-radius: 6px;
       cursor: pointer;
       font-size: 14px;
@@ -140,7 +140,7 @@
 
     <div id="iceContainer">
       <div class="ice-group">
-  <label class="choose">Select Icecream & Quantity:</label>
+  <label class="choose">Select Popsicles & Quantity:</label>
   <select name="icecream[]" class="icecream">
     <option value="">None</option>
     {% for i in icecreams %}
@@ -153,7 +153,7 @@
 
     </div>
 
-    <div class="add-button" onclick="addIcecream(); calculateTotal();">➕ Add Another Scoop</div>
+    <div class="add-button" onclick="addIcecream(); calculateTotal();">➕ Add Another Popsicle</div>
 
     <label class="redeem-label">
       <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
@@ -162,12 +162,19 @@
     
     <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
     <small>You have {{ user_rewards }} reward points</small>
+    <div style="margin-top: 15px;">
+  <label for="referral_code" class="choose">Enter Referral Code:</label>
+  <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
+        style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+  <small id="referralMsg" style="color: green; display: none;">Referral code applied!</small>
+  <small id="referralError" style="color: red; display: none;">Invalid referral code</small>
+</div>
 
     <div style="margin-top: 20px; font-size: 1em; font-weight: bold; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
-    <div id="discountNote">🎉 10% multi-scoop discount applied (2 or more scoops)</div>
+    <div id="discountNote">10% discount applied (2 or more popsicles)</div>
 
     <button type="submit" style="color:#000000;">Proceed to Pay</button>
   </form>
@@ -177,57 +184,30 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-  const elements = document.querySelectorAll(".about-startup, .features");
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      entry.target.classList.toggle("animate-in", entry.isIntersecting);
-    });
-  }, { threshold: 0.3 });
-  elements.forEach((el) => observer.observe(el));
-});
-
-function updateAddonState(group) {
-  const smoothieSel = group.querySelector("select.smoothie");
-  const addonSelects = group.querySelectorAll("select.addon");
-  if (!smoothieSel) return;
-  addonSelects.forEach((addonSel) => {
-    if (!smoothieSel.value) {
-      addonSel.value = "";
-      addonSel.disabled = true;
-      addonSel.style.opacity = "0.5";
-    } else {
-      addonSel.disabled = false;
-      addonSel.style.opacity = "1";
-    }
-  });
-}
-
-document.addEventListener("DOMContentLoaded", () => {
-  const url = new URL(window.location.href);
-  if (url.searchParams.get("smoothie")) {
-    document.querySelector(".form-container").scrollIntoView({ behavior: "smooth" });
-  }
-});
-
-function launchConfetti() {
-  const duration = 3000;
-  const end = Date.now() + duration;
-  (function frame() {
-    confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
-    confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
-    if (Date.now() < end) requestAnimationFrame(frame);
-  })();
-}
-</script>
-
-
-<script>
   const prices = {{ prices | tojson }};
   const icecreams = {{ icecreams | tojson }};
 
+  let validReferralCodes = [];
+  let discountTriggered = false;
+
   function normalize(str) { return (str || '').toString().trim().toLowerCase(); }
 
+  // -----------------------------
+  // Confetti
+  // -----------------------------
+  function launchConfetti() {
+    const duration = 3000;
+    const end = Date.now() + duration;
+    (function frame() {
+      confetti({ particleCount: 6, angle: 60, spread: 55, origin: { x: 0 } });
+      confetti({ particleCount: 6, angle: 120, spread: 55, origin: { x: 1 } });
+      if (Date.now() < end) requestAnimationFrame(frame);
+    })();
+  }
+
+  // -----------------------------
+  // Calculate Total
+  // -----------------------------
   function calculateTotal() {
     let total = 0;
     let totalScoops = 0;
@@ -248,16 +228,30 @@ function launchConfetti() {
       }
     });
 
-    // Apply 10% discount if total scoops >= 2
+    // Multi-scoop discount (5%)
     const discountNote = document.getElementById("discountNote");
     if (totalScoops >= 2) {
-      total = total * 0.9;
+      total *= 0.95;
       if (discountNote) discountNote.style.display = "block";
+      if (!discountTriggered) {
+        launchConfetti();
+        discountTriggered = true;
+      }
     } else {
       if (discountNote) discountNote.style.display = "none";
+      discountTriggered = false;
     }
 
-    // Redeem handling (same as your flow)
+    // Referral discount (10%)
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      const code = referralInput.value.trim().toLowerCase();
+      if (validReferralCodes.length && validReferralCodes.includes(code)) {
+        total *= 0.90;
+      }
+    }
+
+    // Redeem rewards
     const toggle = document.getElementById("redeem_toggle");
     const input = document.getElementById("redeem_points");
     if (toggle && toggle.checked && input) {
@@ -272,6 +266,9 @@ function launchConfetti() {
     document.getElementById("totalPrice").textContent = total.toFixed(2);
   }
 
+  // -----------------------------
+  // Add / Remove Icecream
+  // -----------------------------
   function addIcecream() {
     const div = document.createElement("div");
     div.className = "ice-group";
@@ -280,27 +277,24 @@ function launchConfetti() {
 
     div.innerHTML = `
       <label>Select Icecream & Quantity:</label>
-
       <select name="icecream[]" class="icecream">
         <option value="">None</option>
         ${options}
       </select>
-
       <input type="number" name="quantity[]" min="1" value="1">
-
-      <!-- Minus button ONLY on added scoops -->
       <button type="button" class="remove-btn" onclick="removeIcecream(this)">➖</button>
     `;
 
     document.getElementById("iceContainer").appendChild(div);
 
     div.querySelectorAll("select, input").forEach(el => {
-        el.addEventListener("change", calculateTotal);
-        el.addEventListener("input", calculateTotal);
+      el.addEventListener("change", calculateTotal);
+      el.addEventListener("input", calculateTotal);
     });
 
     calculateTotal();
-}
+  }
+
   function removeIcecream(button) {
     const group = button.closest(".ice-group");
     if (group) {
@@ -309,106 +303,142 @@ function launchConfetti() {
     }
   }
 
-  // Initial listeners
+  // -----------------------------
+  // Referral Codes
+  // -----------------------------
+  async function loadReferralCodes() {
+    try {
+      const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSMJKLe-A2NZASP1sl1dNKRdK5Ne-3h-4Cy3bI4I0N_Ikh-j5Tk1bLFqO9DXgO88u3i87REtZJDZWEk/pub?output=csv");
+      const data = await res.text();
+      validReferralCodes = data
+        .split("\n")
+        .map(row => row.split(",")[0].trim().toLowerCase())
+        .filter(code => code.length > 0);
+      calculateTotal();
+    } catch (err) {
+      console.error("Referral load error:", err);
+    }
+  }
+
+  function validateReferral() {
+    const input = document.getElementById("referral_code");
+    const msg = document.getElementById("referralMsg");
+    const err = document.getElementById("referralError");
+
+    if (!input) return;
+
+    const code = input.value.trim().toLowerCase();
+
+    if (!code) {
+      msg.style.display = "none";
+      err.style.display = "none";
+      return;
+    }
+
+    if (validReferralCodes.length && validReferralCodes.includes(code)) {
+      msg.style.display = "block";
+      err.style.display = "none";
+    } else {
+      msg.style.display = "none";
+      err.style.display = "block";
+    }
+  }
+
+  // -----------------------------
+  // Init
+  // -----------------------------
   document.addEventListener("DOMContentLoaded", () => {
+    // Animate on scroll
+    const elements = document.querySelectorAll(".about-startup, .features");
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        entry.target.classList.toggle("animate-in", entry.isIntersecting);
+      });
+    }, { threshold: 0.3 });
+    elements.forEach(el => observer.observe(el));
+
+    // Scroll to form if smoothie param in URL
+    const url = new URL(window.location.href);
+    if (url.searchParams.get("smoothie")) {
+      document.querySelector(".form-container")?.scrollIntoView({ behavior: "smooth" });
+    }
+
+    // About scroll
+    document.getElementById("scroll-about")?.addEventListener("click", function (e) {
+      e.preventDefault();
+      window.scrollTo({ top: 600, behavior: 'smooth' });
+    });
+
+    // Contact link
+    document.getElementById("contact-link")?.addEventListener("click", function (e) {
+      e.preventDefault();
+      alert("You can reach us at: wheyonwheels@gmail.com");
+      window.location.href = "mailto:wheyonwheels@gmail.com";
+    });
+
+    // Show more reviews button
+    const btn = document.getElementById("show-more-btn");
+    if (btn) {
+      btn.addEventListener("click", function () {
+        document.querySelectorAll(".hidden-review").forEach(el => el.style.display = "block");
+        btn.style.display = "none";
+      });
+    }
+
+    // Hamburger menu
+    const hamburger = document.getElementById('hamburger');
+    const mobileMenu = document.getElementById('mobile-menu');
+
+    if (hamburger && mobileMenu) {
+      hamburger.addEventListener('click', function () {
+        const open = mobileMenu.classList.toggle('open');
+        hamburger.classList.toggle('active', open);
+        mobileMenu.setAttribute('aria-hidden', !open);
+        hamburger.setAttribute('aria-expanded', open);
+      });
+
+      mobileMenu.querySelectorAll('a').forEach(a => {
+        a.addEventListener('click', () => {
+          mobileMenu.classList.remove('open');
+          hamburger.classList.remove('active');
+          mobileMenu.setAttribute('aria-hidden', 'true');
+          hamburger.setAttribute('aria-expanded', 'false');
+        });
+      });
+
+      document.addEventListener('keydown', e => {
+        if (e.key === 'Escape') {
+          mobileMenu.classList.remove('open');
+          hamburger.classList.remove('active');
+          mobileMenu.setAttribute('aria-hidden', 'true');
+          hamburger.setAttribute('aria-expanded', 'false');
+        }
+      });
+    }
+
+    // Referral input listener
+    const referralInput = document.getElementById("referral_code");
+    if (referralInput) {
+      referralInput.addEventListener("input", () => {
+        validateReferral();
+        calculateTotal();
+      });
+    }
+
+    // Redeem toggle listener
+    const redeemToggle = document.getElementById("redeem_toggle");
+    if (redeemToggle) redeemToggle.addEventListener("change", calculateTotal);
+
+    // Initial select/input listeners
     document.querySelectorAll("select, input").forEach(el => {
       el.addEventListener("change", calculateTotal);
       el.addEventListener("input", calculateTotal);
     });
 
+    // Load referral codes & initial total
+    loadReferralCodes();
     calculateTotal();
   });
-</script>
-<script>
-  // Animate on scroll
-  document.addEventListener("DOMContentLoaded", function () {
-    const elements = document.querySelectorAll(".about-startup, .features");
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("animate-in");
-        } else {
-          entry.target.classList.remove("animate-in");
-        }
-      });
-    }, {
-      threshold: 0.3
-    });
-
-    elements.forEach(el => observer.observe(el));
-  });
-
-  // Smooth scroll to About section
-  document.getElementById("scroll-about").addEventListener("click", function (e) {
-    e.preventDefault();
-    window.scrollTo({ top: 600, behavior: 'smooth' });
-  });
-
-  // Contact email popup
-  document.addEventListener("DOMContentLoaded", function () {
-    const contactLink = document.getElementById("contact-link");
-    if (contactLink) {
-      contactLink.addEventListener("click", function (e) {
-        e.preventDefault();
-        alert("You can reach us at: wheyonwheels@gmail.com");
-        window.location.href = "mailto:wheyonwheels@gmail.com";
-      });
-    }
-  });
-  document.addEventListener("DOMContentLoaded", function () {
-  const btn = document.getElementById("show-more-btn");
-  if (btn) {
-    btn.addEventListener("click", function () {
-      document.querySelectorAll(".hidden-review").forEach(el => {
-        el.style.display = "block";
-      });
-      btn.style.display = "none"; // hide button after showing all
-    });
-  }
-});
-document.addEventListener('DOMContentLoaded', () => {
-    const hamburger = document.getElementById('hamburger');
-    const navLinks = document.getElementById('nav-links');
-
-    hamburger.addEventListener('click', () => {
-      navLinks.classList.toggle('active');
-    });
-  });
-document.addEventListener('DOMContentLoaded', function () {
-  const hamburger = document.getElementById('hamburger');
-  const mobileMenu = document.getElementById('mobile-menu');
-
-  if (!hamburger || !mobileMenu) return;
-
-  hamburger.addEventListener('click', function () {
-    const open = mobileMenu.classList.toggle('open');
-    hamburger.classList.toggle('active', open); // ✅ adds animation toggle
-    mobileMenu.setAttribute('aria-hidden', !open);
-    hamburger.setAttribute('aria-expanded', open);
-  });
-
-  // Close menu when clicking a link inside it
-  mobileMenu.querySelectorAll('a').forEach(a => {
-    a.addEventListener('click', () => {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    });
-  });
-
-  // Close on Escape key
-  document.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      mobileMenu.classList.remove('open');
-      hamburger.classList.remove('active'); // ✅ reset animation
-      mobileMenu.setAttribute('aria-hidden', 'true');
-      hamburger.setAttribute('aria-expanded', 'false');
-    }
-  });
-});
-
 </script>
 <footer class="site-footer">
   <div class="footer-container">
