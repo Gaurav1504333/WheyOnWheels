@@ -173,7 +173,7 @@
 
     <div id="toastContainer">
       <div class="toast-group">
-        <label class="choose">Choose a Toast/Ricecake or Ladoos and Quantity:</label>
+        <label class="choose">Choose a Toast or Ricecake and Quantity:</label>
 
         <select name="toast[]" class="toast">
           <option value="">None</option>
@@ -189,14 +189,6 @@
     <div class="add-button" onclick="addToast(); calculateTotal();">
       ➕ Add Another Order
     </div>
-
-    <label class="redeem-label">
-      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
-      <span class="redeem-text">Redeem all reward points</span>
-    </label>
-
-    <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
-    <small>You have {{ user_rewards }} reward points</small>
 
     <div style="margin-top: 15px;">
   <label for="referral_code" class="choose">Enter Referral Code:</label>
