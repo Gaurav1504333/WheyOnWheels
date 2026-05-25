@@ -155,13 +155,6 @@
 
     <div class="add-button" onclick="addIcecream(); calculateTotal();">➕ Add Another Popsicle</div>
 
-    <label class="redeem-label">
-      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
-      <span class="redeem-text">Redeem all reward points</span>
-    </label>
-    
-    <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
-    <small>You have {{ user_rewards }} reward points</small>
     <div style="margin-top: 15px;">
   <label for="referral_code" class="choose">Enter Referral Code:</label>
   <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
@@ -468,5 +461,3 @@
 
 </body>
 </html>
-
-
