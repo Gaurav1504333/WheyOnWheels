@@ -832,7 +832,7 @@ def profile():
         # Format standard orders
         for order in all_orders:
             if order.get('icecream'):
-                item_name = order['icecream'] + " (Ice-Cream Order)"
+                item_name = order['icecream'] + " (Popsicle Order)"
             elif order.get('toast'):
                 item_name = order['toast'] + " (Toast Order)"
             elif order.get('workout'):
