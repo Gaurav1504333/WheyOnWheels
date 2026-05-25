@@ -836,7 +836,7 @@ def profile():
             elif order.get('toast'):
                 item_name = order['toast'] + " (Toast Order)"
             elif order.get('workout'):
-                item_name = order['workout'] + " (Workout Order)"
+                item_name = order['workout'] + " (Refreshment Drink Order)"
             else:
                 item_name = (order['smoothie'] or "N/A")
 
