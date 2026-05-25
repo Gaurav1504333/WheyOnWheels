@@ -2,35 +2,30 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Place Workout Order</title>
+  <title>Place Refreshment Order</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='order.css') }}">
   <link rel="icon" href="{{ url_for('static', filename='logo.png') }}" type="image/x-icon">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
     body { overflow-x: hidden; }
 
-    .workout-group,
-    .combo-group {
+    .workout-group {
       display: flex;
       flex-wrap: wrap;
       gap: 20px;
       align-items: flex-start;
       margin-bottom: 15px;
     }
-    .workout-group label,
-    .combo-group label {
+    .workout-group label {
       flex: 1 1 100%;
       margin-bottom: 5px;
     }
     .workout-group select,
-    .workout-group input[type="number"],
-    .combo-group select,
-    .combo-group input[type="number"] {
+    .workout-group input[type="number"] {
       flex: 1;
       min-width: 0;
     }
 
-    /* NEW: remove button */
     .remove-btn {
       background: #ffffffff;
       color: white;
@@ -62,21 +57,6 @@
         margin-top: -4px !important;
       }
 
-      .redeem-label {
-        display: flex;
-        align-items: center;
-        gap: 6px;
-      }
-
-      .redeem-checkbox {
-        transform: scale(0.7);
-        margin: 0 !important;
-      }
-
-      .redeem-text {
-        font-size: 10px;
-        line-height: 1;
-      }
       .div{
         margin-bottom:100px;
       }
@@ -147,12 +127,12 @@
 </nav>
 
 <div class="form-container">
-  <h2>Place Your Workout Order</h2>
+  <h2>Place Your Refreshment Order</h2>
   <form method="POST" action="/order_workout" id="orderForm">
 
     <div id="workoutContainer">
       <div class="workout-group">
-        <label class="choose">Choose a Workout Drink and Quantity:</label>
+        <label class="choose">Choose a Refreshment Drink and Quantity:</label>
 
         <select name="workout[]" class="workout">
           <option value="">None</option>
@@ -162,59 +142,23 @@
         </select>
 
         <input type="number" name="quantity[]" min="1" value="1">
-
-        <select name="addon[]" class="addon">
-          <option value="">No Addon</option>
-          {% for item in addons %}
-            <option value="{{ item }}">{{ item }}</option>
-          {% endfor %}
-        </select>
       </div>
     </div>
-
-    <div class="add-button" onclick="addWorkout(); calculateTotal();">➕ Add Another Workout Drink</div>
-
-    <div class="combo-group">
-      <label class="choose">Choose a Combo, Quantity & Addon:</label>
-
-      <select name="combo" id="combo">
-        <option value="">None</option>
-        {% for item in combos %}
-          <option value="{{ item }}">{{ item }}</option>
-        {% endfor %}
-      </select>
-
-      <input type="number" name="combo_quantity" id="combo_quantity" min="1" value="1">
-
-      <select name="combo_addon" id="combo_addon">
-        <option value="">No Addon</option>
-        {% for item in addons %}
-          <option value="{{ item }}">{{ item }}</option>
-        {% endfor %}
-      </select>
-    </div>
-
-    <label class="redeem-label">
-      <input type="checkbox" name="useRewards" id="redeem_toggle" class="redeem-checkbox">
-      <span class="redeem-text">Redeem all reward points</span>
-    </label>
     
-    <input type="hidden" name="redeem_points" id="redeem_points" value="0" data-max="{{ user_rewards }}">
-    <small>You have {{ user_rewards }} reward points</small>
     <div style="margin-top: 15px;">
-  <label for="referral_code" class="choose">Enter Referral Code:</label>
-  <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
-        style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
-  <small id="referralMsg" style="color: green; display: none;">Referral code applied!</small>
-  <small id="referralError" style="color: red; display: none;">Invalid referral code</small>
-</div>
+      <label for="referral_code" class="choose">Enter Referral Code:</label>
+      <input type="text" id="referral_code" name="referral_code" placeholder="Enter code"
+            style="width: 100%; padding: 8px; border-radius: 6px; border: 1px solid #ccc;">
+      <small id="referralMsg" style="color: green; display: none;">Referral code applied!</small>
+      <small id="referralError" style="color: red; display: none;">Invalid referral code</small>
+    </div>
 
     <div style="margin: 20px 0; font-weight: bold; font-size: 1em; font-family: 'Adieu', sans-serif;">
       Total Bill: ₹<span id="totalPrice">0</span>
     </div>
 
     <div id="discountNote" style="display:none; color: green; margin-top: -10px;">
-      10% discount applied (2 or more items)
+      5% discount applied (2 or more items)
     </div>
 
     <button type="submit" style="color:#000000;">Place Order</button>
@@ -225,19 +169,15 @@
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 
 <script>
-  /* Data */
   const prices = {{ prices | tojson }};
   const workouts = {{ workouts | tojson }};
   const addons = {{ addons | tojson }};
-  const combos = {{ combos | tojson }};
 
   let validReferralCodes = [];
   let discountTriggered = false;
 
-  /* Normalize helper */
   function normalize(s) { return (s || '').toString().trim().toLowerCase(); }
 
-  /* Confetti */
   function launchConfetti() {
     const duration = 3000;
     const end = Date.now() + duration;
@@ -248,37 +188,18 @@
     })();
   }
 
-  /* Update addon state based on smoothie selection */
-  function updateAddonState(group) {
-    const smoothieSel = group.querySelector("select.smoothie");
-    const addonSelects = group.querySelectorAll("select.addon");
-    if (!smoothieSel) return;
-    addonSelects.forEach((addonSel) => {
-      if (!smoothieSel.value) {
-        addonSel.value = "";
-        addonSel.disabled = true;
-        addonSel.style.opacity = "0.5";
-      } else {
-        addonSel.disabled = false;
-        addonSel.style.opacity = "1";
-      }
-    });
-  }
-
-  /* Remove workout row */
   function removeWorkout(btn) {
     btn.parentElement.remove();
     calculateTotal();
   }
 
-  /* Add another workout row */
   function addWorkout() {
     const container = document.getElementById("workoutContainer");
     const row = document.createElement("div");
     row.className = "workout-group";
 
     row.innerHTML = `
-      <label>Choose a Workout Drink and Quantity:</label>
+      <label>Choose a Refreshment Drink and Quantity:</label>
       <select name="workout[]" class="workout">
         <option value="">None</option>
         ${workouts.map(w => `<option value="${w}">${w}</option>`).join('')}
@@ -301,7 +222,6 @@
     calculateTotal();
   }
 
-  /* Total Calculator */
   function calculateTotal() {
     let total = 0;
     let totalItems = 0;
@@ -323,22 +243,6 @@
       }
     });
 
-    const combo = document.getElementById("combo")?.value;
-    const comboQty = parseInt(document.getElementById("combo_quantity")?.value) || 1;
-    const comboAddon = document.getElementById("combo_addon")?.value;
-
-    const ck = combo ? Object.keys(prices).find(k => normalize(k) === normalize(combo)) : null;
-    if (ck) {
-      total += parseFloat(prices[ck]) * comboQty;
-      totalItems += comboQty;
-    }
-
-    const cak = comboAddon ? Object.keys(prices).find(k => normalize(k) === normalize(comboAddon)) : null;
-    if (cak) {
-      total += parseFloat(prices[cak]) * comboQty;
-    }
-
-    // Multi-item discount (5%)
     const discountNote = document.getElementById("discountNote");
     if (totalItems >= 2) {
       total *= 0.95;
@@ -352,7 +256,6 @@
       discountTriggered = false;
     }
 
-    // Referral discount (10%)
     const referralInput = document.getElementById("referral_code");
     if (referralInput) {
       const code = referralInput.value.trim().toLowerCase();
@@ -361,24 +264,10 @@
       }
     }
 
-    // Redeem rewards
-    const redeemToggle = document.getElementById("redeem_toggle");
-    const redeemInput = document.getElementById("redeem_points");
-    if (redeemToggle?.checked) {
-      const max = parseInt(redeemInput.dataset.max) || 0;
-      redeemInput.value = max;
-      total -= max;
-    } else if (redeemInput) {
-      redeemInput.value = 0;
-    }
-
     if (total < 0) total = 0;
     document.getElementById("totalPrice").textContent = total.toFixed(2);
   }
 
-  // -----------------------------
-  // Referral Codes
-  // -----------------------------
   async function loadReferralCodes() {
     try {
       const res = await fetch("https://docs.google.com/spreadsheets/d/e/2PACX-1vSMJKLe-A2NZASP1sl1dNKRdK5Ne-3h-4Cy3bI4I0N_Ikh-j5Tk1bLFqO9DXgO88u3i87REtZJDZWEk/pub?output=csv");
@@ -417,11 +306,7 @@
     }
   }
 
-  // -----------------------------
-  // Init
-  // -----------------------------
   document.addEventListener("DOMContentLoaded", () => {
-    // Animate on scroll
     const elements = document.querySelectorAll(".about-startup, .features");
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
@@ -430,26 +315,22 @@
     }, { threshold: 0.3 });
     elements.forEach(el => observer.observe(el));
 
-    // Scroll to form if smoothie param in URL
     const url = new URL(window.location.href);
     if (url.searchParams.get("smoothie")) {
       document.querySelector(".form-container")?.scrollIntoView({ behavior: "smooth" });
     }
 
-    // About scroll
     document.getElementById("scroll-about")?.addEventListener("click", function (e) {
       e.preventDefault();
       window.scrollTo({ top: 750, behavior: 'smooth' });
     });
 
-    // Contact link
     document.getElementById("contact-link")?.addEventListener("click", function (e) {
       e.preventDefault();
       alert("You can reach us at: wheyonwheels@gmail.com");
       window.location.href = "mailto:wheyonwheels@gmail.com";
     });
 
-    // Show more reviews button
     const btn = document.getElementById("show-more-btn");
     if (btn) {
       btn.addEventListener("click", function () {
@@ -458,7 +339,6 @@
       });
     }
 
-    // Hamburger menu
     const hamburger = document.getElementById('hamburger');
     const mobileMenu = document.getElementById('mobile-menu');
 
@@ -489,7 +369,6 @@
       });
     }
 
-    // Referral input listener
     const referralInput = document.getElementById("referral_code");
     if (referralInput) {
       referralInput.addEventListener("input", () => {
@@ -498,17 +377,11 @@
       });
     }
 
-    // Redeem toggle listener
-    const redeemToggle = document.getElementById("redeem_toggle");
-    if (redeemToggle) redeemToggle.addEventListener("change", calculateTotal);
-
-    // Initial select/input listeners
     document.querySelectorAll("select, input").forEach(el => {
       el.addEventListener("change", calculateTotal);
       el.addEventListener("input", calculateTotal);
     });
 
-    // Load referral codes & initial total
     loadReferralCodes();
     calculateTotal();
   });
