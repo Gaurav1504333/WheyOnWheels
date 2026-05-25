@@ -583,7 +583,7 @@ def payment_page():
         # POST
         if request.method == "POST":
             operator_code_form = request.form.get("operator_code", "").strip()
-            payment_mode = request.form.get("payment_mode", "").lower()
+            payment_mode = request.form.get("payment_mode", "").upper()
 
             if operator_code_form and not payment_mode:
                 if operator_code_form in operator_data:
