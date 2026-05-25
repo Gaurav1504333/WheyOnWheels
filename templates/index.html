@@ -26,18 +26,14 @@
 
 <body>
 <nav class="navbar">
-  <!-- Mobile top bar: hamburger + logo + title -->
-<div class="mobile-header">
-  <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
-  <span class="mobile-title">WHEY-ON-WHEELS</span>
+  <div class="mobile-header">
+    <button id="hamburger" class="hamburger" aria-label="Toggle menu" aria-expanded="false">☰</button>
+    <span class="mobile-title">WHEY-ON-WHEELS</span>
+    {% if session.get('user') %}
+      <a href="/profile" class="mobile-profile">👤</a>
+    {% endif %}
+  </div>
 
-  {% if session.get('user') %}
-    <a href="/profile" class="mobile-profile">👤</a>
-  {% endif %}
-</div>
-
-
-  <!-- Desktop container (kept for desktop) -->
   <div class="navbar-container desktop-nav">
     <div class="nav-left">
       <ul>
@@ -46,7 +42,6 @@
         <li><a href="/order_select">Order</a></li>
       </ul>
     </div>
-
     <div class="nav-right">
       <ul>
         <li><a href="#" id="scroll-about">About Us</a></li>
@@ -61,7 +56,6 @@
     </div>
   </div>
 
-  <!-- Mobile dropdown -->
   <div id="mobile-menu" class="mobile-menu" aria-hidden="true">
     <ul>
       <li><a href="/">Home</a></li>
@@ -80,98 +74,88 @@
 </nav>
 
   <div class="content">
-    <!-- Hero logo before H1 -->
     <div class="hero-logo">
       <div class="logo-ellipse">
         <img src="{{ url_for('static', filename='logo.png') }}" alt="WheyOnWheels Logo">
       </div>
     </div>
-
     <div class="hero_title">
       <h1>Welcome to Whey-On-Wheels</h1>
-      <p>Fresh blends for your workouts.</p>
+      <p>Protein for the masses. Starting with you.</p>
     </div>
   </div>
 
 <!-- Must Try Items Section -->
 <section class="must-try-section fade-in-section">
   <h2 class="must-try-title">Must Try</h2>
-
   <div class="must-try-scroll">
     <div class="must-try-item"></div>
 
     <div class="must-try-item">
-  <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Rich Chocolate Surge">
-  <h3>Rich Chocolate Surge</h3>
-  <p>Deep, chocolatey and power-packed — a true crowd favourite.</p>
-  <a href="/order_smoothie" class="order-btn">Order Now</a>
-</div>
+      <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Rich Chocolate Surge">
+      <h3>Chocolate Surge</h3>
+      <p>Deep, chocolatey and power-packed — a true crowd favourite.</p>
+      <a href="/order_smoothie" class="order-btn">Order Now</a>
+    </div>
 
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Malai Kulfi Indulgence">
-  <h3>Malai Kulfi Indulgence</h3>
-  <p>A nostalgic desi flavour with a smooth, creamy finish.</p>
-  <a href="/order_smoothie" class="order-btn">Order Now</a>
-</div>
+    <div class="must-try-item">
+      <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Malai Kulfi Indulgence">
+      <h3>Malai Kulfi Treat</h3>
+      <p>A nostalgic desi flavour with a smooth, creamy finish.</p>
+      <a href="/order_smoothie" class="order-btn">Order Now</a>
+    </div>
 
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Berry Power Mix">
-  <h3>Berry Power Mix</h3>
-  <p>Light, fruity and refreshing — perfect for a clean boost.</p>
-  <a href="/order_smoothie" class="order-btn">Order Now</a>
-</div>
+    <div class="must-try-item">
+      <img src="{{ url_for('static', filename='smoothie.png') }}" alt="Berry Power Mix">
+      <h3>Berry Power Mix</h3>
+      <p>Light, fruity and refreshing — perfect for a clean boost.</p>
+      <a href="/order_smoothie" class="order-btn">Order Now</a>
+    </div>
 
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='toast.png') }}" alt="Classic Peanut Butter Toast">
-  <h3>Classic Peanut Butter Toast</h3>
-  <p>Simple, satisfying and always a reliable pick.</p>
-  <a href="/order_toast" class="order-btn">Order Now</a>
-</div>
+    <div class="must-try-item">
+      <img src="{{ url_for('static', filename='toast.png') }}" alt="Classic Peanut Butter Toast">
+      <h3>Classic Peanut Butter Toast</h3>
+      <p>Simple, satisfying and always a reliable pick.</p>
+      <a href="/order_toast" class="order-btn">Order Now</a>
+    </div>
 
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='ricecake.png') }}" alt="Dark Chocolate Crunch Rice Cake">
-  <h3>Dark Chocolate Crunch Rice Cake</h3>
-  <p>Light, crispy and perfectly balanced for sweet cravings.</p>
-  <a href="/order_toast" class="order-btn">Order Now</a>
-</div>
+    <div class="must-try-item">
+      <img src="{{ url_for('static', filename='ricecake.png') }}" alt="Dark Chocolate Crunch Rice Cake">
+      <h3>Dark Chocolate Crunch Rice Cake</h3>
+      <p>Light, crispy and perfectly balanced for sweet cravings.</p>
+      <a href="/order_toast" class="order-btn">Order Now</a>
+    </div>
 
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='ladoos.png') }}" alt="Creamy Caramel Nut Laddoo">
-  <h3>Creamy Caramel Nut Laddoo</h3>
-  <p>Soft, rich and indulgent with a wholesome twist.</p>
-  <a href="/order_toast" class="order-btn">Order Now</a>
-</div>
+    <div class="must-try-item">
+      <img src="{{ url_for('static', filename='icecream.png') }}" alt="Nutty Chocolate Hazelnut">
+      <h3>Nutty Chocolate Hazelnut</h3>
+      <p>A frozen chocolate treat with a smooth, nutty vibe.</p>
+      <a href="/order_icecream" class="order-btn">Order Now</a>
+    </div>
 
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='icecream.png') }}" alt="Nutty Chocolate Hazelnut">
-  <h3>Nutty Chocolate Hazelnut</h3>
-  <p>A frozen chocolate treat with a smooth, nutty vibe.</p>
-  <a href="/order_icecream" class="order-btn">Order Now</a>
-</div>
-
-<div class="must-try-item">
-  <img src="{{ url_for('static', filename='icecream.png') }}" alt="Rich Belgian Chocolate">
-  <h3>Rich Belgian Chocolate</h3>
-  <p>Intensely chocolatey, smooth and seriously satisfying.</p>
-  <a href="/order_icecream" class="order-btn">Order Now</a>
-</div>
-
+    <div class="must-try-item">
+      <img src="{{ url_for('static', filename='icecream.png') }}" alt="Rich Belgian Chocolate">
+      <h3>Rich Belgian Chocolate</h3>
+      <p>Intensely chocolatey, smooth and seriously satisfying.</p>
+      <a href="/order_icecream" class="order-btn">Order Now</a>
+    </div>
   </div>
 </section>
 
+<!-- About Section -->
+<section class="about-startup">
+  <h2>About Us</h2>
+  <p>
+    WheyOnWheels is a Mumbai-based protein nutrition brand supplying premium premix blends to corporate cafeterias and college canteens across the city.
+    We work with rising whey brands like Avvatar to deliver affordable, high-quality, and great-tasting protein smoothies, creatine drinks, and nutritious snacks - making clean nutrition accessible to students and professionals alike.
+    Our premix solutions are designed for convenience, allowing canteens and cafeterias to serve consistent, performance-focused nutrition with zero hassle.
+    Currently in our beta phase, we're using this canteen and corporate supply model to refine our blends, understand our customers, and build a loyal base.
+    Next up - our very own food truck hitting the streets of Mumbai, bringing WheyOnWheels directly to fitness enthusiasts citywide.
+    And that's just the beginning. Our long-term vision is a full FMCG pivot, putting WheyOnWheels products on shelves across India.
+  </p>
+</section>
 
-
-  <!-- Startup Info Section -->
-  <section class="about-startup">
-    <h2>About Us</h2>
-    <p>
-      WheyOnWheels is India’s first mobile protein smoothie truck, dedicated to delivering high-quality nutrition right after your workout.
-      We partner with rising whey brands like Avvatar to bring affordable, delicious, and performance-focused smoothies to fitness enthusiasts.
-      Our trucks operate in major fitness zones and premium areas like Bandra, Andheri, BKC, and Malad. With gamified discounts, loyalty perks, and optional creatine & EAAs add-ons,
-      we’re not just fueling gains — we’re building a movement.
-    </p>
-  </section>
-  <!-- Avvatar Partner Section -->
+<!-- Avvatar Partner Section -->
 <section class="avvatar-section fade-in-section">
   <div class="avvatar-container">
     <div class="avvatar-logo">
@@ -180,97 +164,75 @@
     <div class="avvatar-content">
       <h2>Powered by Avvatar Whey Protein</h2>
       <p>
-        <strong>Avvatar</strong> is India’s first 100% whey protein made from pure cow’s milk — 
-        sourced, processed, and packaged entirely within the country by <strong>Parag Milk Foods</strong>. 
-        With international-grade quality and unmatched freshness, Avvatar delivers complete protein with 
-        a high biological value and rich amino acid profile. 
+        <strong>Avvatar</strong> is India's first 100% whey protein made from pure cow's milk —
+        sourced, processed, and packaged entirely within the country by <strong>Parag Milk Foods</strong>.
+        With international-grade quality and unmatched freshness, Avvatar delivers complete protein with
+        a high biological value and rich amino acid profile.
       </p>
       <p>
-        Every scoop is <strong>free from preservatives, added sugar, and banned substances</strong>, 
-        making it a trusted choice for athletes and fitness enthusiasts across India. 
-        At <strong>WheyOnWheels</strong>, we proudly blend every smoothie with Avvatar Whey to 
-        ensure clean, authentic, and effective nutrition — straight from India’s own protein powerhouse.
+        Every scoop is <strong>free from preservatives, added sugar, and banned substances</strong>,
+        making it a trusted choice for athletes and fitness enthusiasts across India.
+        At <strong>WheyOnWheels</strong>, we proudly blend every smoothie with Avvatar Whey to
+        ensure clean, authentic, and effective nutrition — straight from India's own protein powerhouse.
       </p>
     </div>
   </div>
 </section>
 
-
-  <!-- Features Highlight Section -->
+<!-- Features Section -->
 <section class="features">
   <h2>Why WheyOnWheels?</h2>
   <div class="features-grid">
     <div class="feature">
-  <h3>Mobile Convenience</h3>
-  <p>
-    Say goodbye to detours and delays — our smoothie truck parks right outside your gym. Whether it’s post-leg day or a quick protein top-up, we’re steps away with cold, ready-to-blend goodness. Just grab, sip, and go.
-  </p>
-</div>
+      <h3>B2B Supply Partner</h3>
+      <p>
+        We supply premium protein blends directly to college canteens, corporate cafeterias, and wellness programmes. Reliable bulk orders, consistent quality, and flexible plans tailored to your institution's needs.
+      </p>
+    </div>
 
-<div class="feature">
-  <h3>Science-Backed Nutrition</h3>
-  <p>
-    Every smoothie is crafted with premium-grade whey protein, balanced macros, and the option to add creatine & EAAs. Designed in collaboration with certified nutritionists to support real recovery and real gains.
-  </p>
-</div>
+    <div class="feature">
+      <h3>Science-Backed Nutrition</h3>
+      <p>
+        Every blend is crafted with premium-grade whey protein, balanced macros, and the option to add creatine. Designed in collaboration with certified nutritionists to support real recovery and real gains.
+      </p>
+    </div>
 
-<div class="feature">
-  <h3>Fitness Meets Fun</h3>
-  <p>
-    We gamify your grind. Take on mini fitness challenges to unlock discounts, earn loyalty rewards with every sip. Who says serious fitness can’t be seriously fun?
-  </p>
-</div>
-
+    <div class="feature">
+      <h3>Wellness for Everyone</h3>
+      <p>
+        From college students to corporate professionals, we believe great nutrition should be accessible. Our blends fit seamlessly into daily routines, supporting energy, focus, and performance all day long.
+      </p>
+    </div>
   </div>
 </section>
+
 <section class="info-section">
-<h2>What Is Whey Protein?</h2>
-<p>Whey protein is a high-quality, fast-absorbing protein that helps your body repair and build muscle. It contains essential amino acids that support recovery and overall fitness.</p>
+  <h2>What Is Whey Protein?</h2>
+  <p>Whey protein is a high-quality, fast-absorbing protein that helps your body repair and build muscle. It contains essential amino acids that support recovery and overall fitness.</p>
 
+  <h3>Why Is It Important?</h3>
+  <ul>
+    <li>Boosts muscle growth and repair</li>
+    <li>Speeds up recovery after workouts</li>
+    <li>Keeps you full and reduces cravings</li>
+  </ul>
 
-<h3>Why Is Whey Protein Important?</h3>
-<ul>
-<li>Boosts muscle growth and repair</li>
-<li>Improves metabolism and supports fat loss</li>
-<li>Speeds up recovery after workouts</li>
-<li>Keeps you full and reduces cravings</li>
-</ul>
+  <h3>How Does It Work?</h3>
+  <p>Rich in BCAAs, whey protein triggers muscle protein synthesis — the process your body uses to build new muscle tissue. Its fast absorption makes it ideal post-workout for maximum results.</p>
 
+  <h2>What Are Creatine Drinks?</h2>
+  <p>Creatine drinks are flavoured beverages infused with creatine monohydrate — one of the most researched and effective supplements for improving strength, power, and performance.</p>
 
-<h3>How Does Whey Protein Work?</h3>
-<p>Rich in BCAAs, whey protein triggers muscle protein synthesis — the process your body uses to build new muscle tissue. Its fast absorption makes it ideal post-workout for maximum results.</p>
+  <h3>Why Are They Important?</h3>
+  <ul>
+    <li>Increase strength and explosive power</li>
+    <li>Enhance muscle endurance during high-intensity training</li>
+    <li>Support faster muscle recovery between sets</li>
+    <li>Help build lean muscle mass over time</li>
+  </ul>
 
-
-<h2>What Are Intra-Workout Drinks?</h2>
-<p>Intra-workout drinks keep you energized and hydrated during your workout, helping you perform at your best.</p>
-
-
-<h3>Why Are They Important?</h3>
-<ul>
-<li>Replenish electrolytes lost through sweat</li>
-<li>Maintain hydration and endurance</li>
-<li>Prevent fatigue during intense training</li>
-</ul>
-
-
-<h3>How Do They Work?</h3>
-<p>These drinks contain electrolytes, fast-digesting carbs, and amino acids that fuel your muscles in real-time, helping you push harder.</p>
-
-
-<h2>What Are Pre-Workout Drinks?</h2>
-<p>Pre-workouts boost your energy, strength, and focus before training, helping you make the most of every session.</p>
-
-
-<h3>Why Are They Important?</h3>
-<ul>
-<li>Increase energy and performance</li>
-<li>Improve strength and stamina</li>
-<li>Enhance focus for better workouts</li>
-</ul>
-
-
-<h3>How Do They Work?</h3>
-<p>Ingredients like caffeine, citrulline, and beta-alanine enhance blood flow, reduce fatigue, and sharpen mental focus — preparing your body for peak performance.</p>
+  <h3>How Do They Work?</h3>
+  <p>Creatine increases phosphocreatine stores in your muscles, allowing your body to produce more ATP — the primary energy source for short bursts of intense activity. Our flavoured creatine drinks make it easy and enjoyable to hit your daily dose consistently.</p>
 </section>
 
 <section class="reviews">
@@ -286,7 +248,6 @@
 
     <label for="comment">Your Review:</label>
     <textarea id="comment" name="comment" rows="4" required></textarea>
-
     <button type="submit">Submit Review</button>
   </form>
 
@@ -310,97 +271,48 @@
   {% endif %}
 </section>
 
-
-  <script>
+<script>
 document.addEventListener("DOMContentLoaded", function () {
 
-  /* ===============================
-     ANIMATE SECTIONS ON SCROLL
-  ================================ */
-  const animatedSections = document.querySelectorAll(
-    ".about-startup, .features, .fade-in-section"
-  );
-
+  const animatedSections = document.querySelectorAll(".about-startup, .features, .fade-in-section");
   const sectionObserver = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting) {
         entry.target.classList.add("animate-in", "is-visible");
-        sectionObserver.unobserve(entry.target); // animate once
+        sectionObserver.unobserve(entry.target);
       }
     });
   }, { threshold: 0.25 });
-
   animatedSections.forEach(sec => sectionObserver.observe(sec));
 
-
-  /* ===============================
-     ABOUT US SCROLL (DESKTOP + MOBILE)
-  ================================ */
-function scrollToAbout() {
-  const about = document.querySelector(".about-startup");
-  if (!about) return;
-
-  const yOffset = -200; // 👈 reduce scroll by 200px
-  const y = about.getBoundingClientRect().top + window.pageYOffset + yOffset;
-
-  window.scrollTo({ top: y, behavior: "smooth" });
-}
-
+  function scrollToAbout() {
+    const about = document.querySelector(".about-startup");
+    if (!about) return;
+    const y = about.getBoundingClientRect().top + window.pageYOffset - 200;
+    window.scrollTo({ top: y, behavior: "smooth" });
+  }
 
   const desktopAbout = document.getElementById("scroll-about");
   const mobileAbout = document.getElementById("mobile-about");
+  if (desktopAbout) desktopAbout.addEventListener("click", e => { e.preventDefault(); scrollToAbout(); });
+  if (mobileAbout) mobileAbout.addEventListener("click", e => { e.preventDefault(); scrollToAbout(); closeMobileMenu(); });
 
-  if (desktopAbout) desktopAbout.addEventListener("click", e => {
-    e.preventDefault();
-    scrollToAbout();
-  });
-
-  if (mobileAbout) mobileAbout.addEventListener("click", e => {
-    e.preventDefault();
-    scrollToAbout();
-    closeMobileMenu();
-  });
-
-
-  /* ===============================
-     CONTACT US (DESKTOP + MOBILE)
-  ================================ */
   function contactUs() {
     window.location.href = "mailto:wheyonwheels@gmail.com";
   }
-
   const desktopContact = document.getElementById("contact-link");
   const mobileContact = document.getElementById("mobile-contact");
+  if (desktopContact) desktopContact.addEventListener("click", e => { e.preventDefault(); contactUs(); });
+  if (mobileContact) mobileContact.addEventListener("click", e => { e.preventDefault(); contactUs(); closeMobileMenu(); });
 
-  if (desktopContact) desktopContact.addEventListener("click", e => {
-    e.preventDefault();
-    contactUs();
-  });
-
-  if (mobileContact) mobileContact.addEventListener("click", e => {
-    e.preventDefault();
-    contactUs();
-    closeMobileMenu();
-  });
-
-
-  /* ===============================
-     SHOW MORE REVIEWS
-  ================================ */
   const showMoreBtn = document.getElementById("show-more-btn");
   if (showMoreBtn) {
     showMoreBtn.addEventListener("click", () => {
-      document.querySelectorAll(".hidden-review").forEach(el => {
-        el.style.display = "block";
-      });
+      document.querySelectorAll(".hidden-review").forEach(el => { el.style.display = "block"; });
       showMoreBtn.style.display = "none";
     });
   }
 
-
-  /* ===============================
-     MOBILE MENU TOGGLE
-  ================================ */
   const hamburger = document.getElementById("hamburger");
   const mobileMenu = document.getElementById("mobile-menu");
 
@@ -419,8 +331,6 @@ function scrollToAbout() {
       mobileMenu.setAttribute("aria-hidden", !open);
       hamburger.setAttribute("aria-expanded", open);
     });
-
-    // Close on ESC
     document.addEventListener("keydown", e => {
       if (e.key === "Escape") closeMobileMenu();
     });
@@ -428,33 +338,14 @@ function scrollToAbout() {
 
 });
 </script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const sections = document.querySelectorAll(".fade-in-section");
 
-    const observer = new IntersectionObserver((entries, observer) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          observer.unobserve(entry.target); // optional: triggers only once
-        }
-      });
-    }, { threshold: 0.2 });
-
-    sections.forEach(section => {
-      observer.observe(section);
-    });
-  });
-</script>
-
-
-  <!-- Footer Section -->
+ <!-- Footer Section -->
   <footer class="site-footer">
   <div class="footer-container">
 
     <div class="footer-section about">
       <h3>WheyOnWheels</h3>
-      <p>Your everyday healthy smoothie partner — fresh, nutritious, and delivered with care.</p>
+      <p>Your everyday healthy smoothie partner - fresh, nutritious, and delivered with care.</p>
     </div>
 
     <div class="footer-section contact">
@@ -475,6 +366,6 @@ function scrollToAbout() {
   <p class="footer-bottom">&copy; 2025 WheyOnWheels • All Rights Reserved</p>
 </footer>
 
-</body>
 
+</body>
 </html>
